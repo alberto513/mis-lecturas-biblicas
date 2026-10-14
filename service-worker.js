@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lecturas-biblicas-v7';
+const CACHE_NAME = 'lecturas-biblicas-v8';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './content/NT_001_Mateo_1-18.txt', './content/NT_002_Mateo_19-28_Marcos_1-5.txt',
@@ -26,10 +26,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).then((response) => {
       const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
       return response;
     }).catch(() => caches.match(event.request)));
     return;
   }
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => { const clone = response.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)); return response; })));
+  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => { const clone = response.clone(); if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)); return response; })));
 });

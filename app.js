@@ -260,4 +260,4 @@ document.querySelector('#fullscreen-button').addEventListener('click', async () 
 });
 
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=7'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=8'));
