@@ -65,9 +65,10 @@ h1 em { color: var(--gold-soft); font-weight: 400; }
 .transport { display: flex; justify-content: center; align-items: center; gap: clamp(.35rem, 2.5vw, .8rem); margin: 1.8rem 0 .9rem; }
 .round-button, .play-button { display: grid; place-items: center; color: var(--text); border: 1px solid var(--line); background: var(--panel-raised); cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
 .round-button:hover, .round-button:focus-visible, .play-button:hover, .play-button:focus-visible { border-color: var(--gold); outline: none; transform: scale(1.04); }
-.round-button { width: clamp(2.9rem, 12vw, 3.8rem); height: clamp(2.9rem, 12vw, 3.8rem); border-radius: 50%; font-size: 1.35rem; line-height: .8; }
+.round-button { width: clamp(2.5rem, 11vw, 3.8rem); height: clamp(2.5rem, 11vw, 3.8rem); border-radius: 50%; font-size: 1.35rem; line-height: .8; }
 .round-button small { color: var(--muted); font-size: .48rem; margin-top: -.25rem; }
-.play-button { width: clamp(4.5rem, 18vw, 5.6rem); height: clamp(4.5rem, 18vw, 5.6rem); border-radius: 50%; border-color: var(--gold); background: linear-gradient(135deg, #d5af62, #9e7435); color: #120e07; font-size: 1.7rem; box-shadow: 0 0 2rem rgba(213, 175, 98, .2); }
+.font-button { font-family: Georgia, "Times New Roman", serif; font-size: 1.2rem; }
+.play-button { width: clamp(4.05rem, 17vw, 5.6rem); height: clamp(4.05rem, 17vw, 5.6rem); border-radius: 50%; border-color: var(--gold); background: linear-gradient(135deg, #d5af62, #9e7435); color: #120e07; font-size: 1.7rem; box-shadow: 0 0 2rem rgba(213, 175, 98, .2); }
 .speed { margin: 0; color: var(--gold-soft); text-align: center; font-size: .9rem; font-weight: 650; line-height: 1.65; font-variant-numeric: tabular-nums; white-space: pre-line; }
 
 :fullscreen { background: var(--ink); }

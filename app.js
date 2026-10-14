@@ -253,11 +253,12 @@ ui.play.addEventListener('click', () => isPlaying ? pause() : play());
 document.querySelector('#back-word-button').addEventListener('click', () => { pause(); position = clamp(position - 10, 0, words.length - 1); renderReader(); saveProgress(); });
 document.querySelector('#slower-button').addEventListener('click', () => { settings.speed = clamp(settings.speed - 25, 100, 1000); renderReader(); saveProgress(); });
 document.querySelector('#faster-button').addEventListener('click', () => { settings.speed = clamp(settings.speed + 25, 100, 1000); renderReader(); saveProgress(); });
-document.querySelector('#font-button').addEventListener('click', () => { settings.fontSize = (settings.fontSize + 1) % 4; renderReader(); saveProgress(); });
+document.querySelector('#smaller-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize - 1, 0, 3); renderReader(); saveProgress(); });
+document.querySelector('#larger-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize + 1, 0, 3); renderReader(); saveProgress(); });
 ui.progress.addEventListener('input', () => { pause(); position = Number(ui.progress.value); renderReader(); saveProgress(); });
 document.querySelector('#fullscreen-button').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch { /* Some mobile browsers intentionally do not support fullscreen. */ }
 });
 
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=8'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=9'));

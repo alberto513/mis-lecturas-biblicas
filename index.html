@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=8" />
+    <link rel="stylesheet" href="./styles.css?v=9" />
     <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
@@ -55,7 +55,8 @@
             <button class="round-button secondary" id="slower-button" type="button" aria-label="Disminuir velocidad">−<small>PPM</small></button>
             <button class="play-button" id="play-button" type="button" aria-label="Reproducir">▶</button>
             <button class="round-button secondary" id="faster-button" type="button" aria-label="Aumentar velocidad">+<small>PPM</small></button>
-            <button class="round-button secondary" id="font-button" type="button" aria-label="Cambiar tamaño de letra">A<small>A</small></button>
+            <button class="round-button secondary font-button" id="smaller-font-button" type="button" aria-label="Reducir tamaño de letra">A<small>−</small></button>
+            <button class="round-button secondary font-button" id="larger-font-button" type="button" aria-label="Aumentar tamaño de letra">A<small>+</small></button>
           </div>
 
           <p class="speed" id="speed-label" aria-live="polite">250 palabras por minuto<br />Tiempo restante: —</p>
@@ -63,6 +64,6 @@
       </section>
     </main>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
-    <script type="module" src="./app.js?v=8"></script>
+    <script type="module" src="./app.js?v=9"></script>
   </body>
 </html>
