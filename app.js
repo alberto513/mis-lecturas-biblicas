@@ -34,7 +34,7 @@ const ui = {
   library: document.querySelector('#library-view'), reader: document.querySelector('#reader-view'), grid: document.querySelector('#reading-grid'),
   status: document.querySelector('#library-status'), title: document.querySelector('#reader-title'), word: document.querySelector('#word-display'),
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
-  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'),
+  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), timeRemaining: document.querySelector('#time-remaining'),
 };
 
 function progressFor(reading) {
@@ -50,6 +50,13 @@ function saveProgress() {
 }
 
 function formatProgress(value) { return `${Math.round(value)} % leído`; }
+
+function formatDuration(milliseconds) {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes} min ${String(seconds).padStart(2, '0')} s`;
+}
 
 function renderLibrary() {
   ui.grid.replaceChildren(...readings.map((reading) => {
@@ -82,6 +89,7 @@ function renderReader() {
   ui.count.textContent = `${position + 1} / ${words.length}`;
   ui.progressLabel.textContent = formatProgress(((position + 1) / words.length) * 100);
   ui.speed.textContent = `${settings.speed} palabras por minuto`;
+  ui.timeRemaining.textContent = `Tiempo restante: ${formatDuration(remainingDuration())}`;
   document.documentElement.style.setProperty('--reader-word-size', settings.fontSize);
   ui.word.style.fontSize = `clamp(${2.9 + settings.fontSize * .28}rem, ${13 + settings.fontSize}vw, ${6.8 + settings.fontSize * .4}rem)`;
 }
@@ -92,6 +100,12 @@ function delayFor(word) {
   if (/[:;][”"')\]]?$/.test(word)) return base * 1.55;
   if (/,[”"')\]]?$/.test(word)) return base * 1.3;
   return base;
+}
+
+function remainingDuration() {
+  let milliseconds = 0;
+  for (let index = position; index < words.length - 1; index += 1) milliseconds += delayFor(words[index]);
+  return milliseconds;
 }
 
 function nextWord() {
