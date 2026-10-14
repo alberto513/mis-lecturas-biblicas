@@ -131,7 +131,7 @@ async function openReader(reading) {
   pause();
   activeReading = reading;
   ui.status.textContent = '';
-  ui.title.textContent = reading.title;
+  ui.title.textContent = `VBL · ${reading.title}`;
   ui.library.classList.add('is-hidden');
   ui.reader.classList.remove('is-hidden');
   ui.word.textContent = 'Cargando…';
