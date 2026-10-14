@@ -28,6 +28,6 @@ Las palabras se cuentan como grupos separados por espacios, que es la misma unid
 
 ## Publicación
 
-El flujo de trabajo `.github/workflows/deploy-pages.yml` publica automáticamente este sitio cuando la rama `main` se sube al repositorio. En GitHub, selecciona **Settings → Pages → Source: GitHub Actions** si la plataforma no lo activa automáticamente.
+GitHub Pages publica este sitio directamente desde la raíz de la rama `main`, sin servicios de pago ni procesos externos.
 
 Una vez publicado, la URL tendrá este formato: `https://<usuario>.github.io/<repositorio>/`.
