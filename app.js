@@ -60,9 +60,10 @@ const SETTINGS_KEY = 'lecturas-biblicas:settings';
 const PROGRESS_PREFIX = 'lecturas-biblicas:progress:';
 const clamp = (number, minimum, maximum) => Math.min(maximum, Math.max(minimum, number));
 
-let settings = { speed: 250, fontSize: 0, versionId: 'vbl' };
+let settings = { speed: 250, fontSize: 10, versionId: 'vbl' };
 try { settings = { ...settings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { /* Local storage may be unavailable. */ }
 if (!VERSIONS[settings.versionId]) settings.versionId = 'vbl';
+settings.fontSize = clamp(Number(settings.fontSize) || 10, 1, 20);
 
 let activeReading = null;
 let activeVersion = null;
@@ -75,7 +76,7 @@ const ui = {
   library: document.querySelector('#library-view'), reader: document.querySelector('#reader-view'), grid: document.querySelector('#reading-grid'),
   status: document.querySelector('#library-status'), title: document.querySelector('#reader-title'), word: document.querySelector('#word-display'),
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
-  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), versionSelect: document.querySelector('#version-select'),
+  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), fontSize: document.querySelector('#font-size-label'), versionSelect: document.querySelector('#version-select'),
   versionCredit: document.querySelector('#version-credit'),
 };
 
@@ -172,8 +173,8 @@ function renderReader() {
   ui.count.textContent = `${position + 1} / ${words.length}`;
   ui.progressLabel.textContent = formatProgress(((position + 1) / words.length) * 100);
   ui.speed.textContent = `${settings.speed} palabras por minuto\nTiempo restante: ${formatDuration(remainingDuration())}`;
-  document.documentElement.style.setProperty('--reader-word-size', settings.fontSize);
-  ui.word.style.fontSize = `clamp(${2.9 + settings.fontSize * .28}rem, ${13 + settings.fontSize}vw, ${6.8 + settings.fontSize * .4}rem)`;
+  ui.fontSize.value = String(settings.fontSize);
+  ui.word.style.fontSize = `clamp(${2.2 + settings.fontSize * .12}rem, ${11 + settings.fontSize * .45}vw, ${5 + settings.fontSize * .23}rem)`;
 }
 
 function delayFor(word) {
@@ -253,12 +254,12 @@ ui.play.addEventListener('click', () => isPlaying ? pause() : play());
 document.querySelector('#back-word-button').addEventListener('click', () => { pause(); position = clamp(position - 10, 0, words.length - 1); renderReader(); saveProgress(); });
 document.querySelector('#slower-button').addEventListener('click', () => { settings.speed = clamp(settings.speed - 25, 100, 1000); renderReader(); saveProgress(); });
 document.querySelector('#faster-button').addEventListener('click', () => { settings.speed = clamp(settings.speed + 25, 100, 1000); renderReader(); saveProgress(); });
-document.querySelector('#smaller-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize - 1, 0, 3); renderReader(); saveProgress(); });
-document.querySelector('#larger-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize + 1, 0, 3); renderReader(); saveProgress(); });
+document.querySelector('#smaller-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize - 1, 1, 20); renderReader(); saveProgress(); });
+document.querySelector('#larger-font-button').addEventListener('click', () => { settings.fontSize = clamp(settings.fontSize + 1, 1, 20); renderReader(); saveProgress(); });
 ui.progress.addEventListener('input', () => { pause(); position = Number(ui.progress.value); renderReader(); saveProgress(); });
 document.querySelector('#fullscreen-button').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch { /* Some mobile browsers intentionally do not support fullscreen. */ }
 });
 
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=9'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=10'));
