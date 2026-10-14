@@ -1,3 +1,25 @@
+const RVR1960_FILES = [
+  'AT_001_Genesis_01_a_Genesis_23.txt', 'AT_002_Genesis_24_a_Genesis_40.txt', 'AT_003_Genesis_41_a_Exodo_08.txt',
+  'AT_004_Exodo_09_a_Exodo_27.txt', 'AT_005_Exodo_28_a_Levitico_05.txt', 'AT_006_Levitico_06_a_Levitico_22.txt',
+  'AT_007_Levitico_23_a_Numeros_09.txt', 'AT_008_Numeros_10_a_Numeros_26.txt', 'AT_009_Numeros_27_a_Deuteronomio_07.txt',
+  'AT_010_Deuteronomio_08_a_Deuteronomio_27.txt', 'AT_011_Deuteronomio_28_a_Josue_09.txt', 'AT_012_Josue_10_a_Jueces_03.txt',
+  'AT_013_Jueces_04_a_Jueces_19.txt', 'AT_014_Jueces_20_a_1Samuel_13.txt', 'AT_015_1Samuel_14_a_1Samuel_29.txt',
+  'AT_016_1Samuel_30_a_2Samuel_17.txt', 'AT_017_2Samuel_18_a_1Reyes_07.txt', 'AT_018_1Reyes_08_a_1Reyes_21.txt',
+  'AT_019_1Reyes_22_a_2Reyes_15.txt', 'AT_020_2Reyes_16_a_1Cronicas_07.txt', 'AT_021_1Cronicas_08_a_1Cronicas_28.txt',
+  'AT_022_1Cronicas_29_a_2Cronicas_21.txt', 'AT_023_2Cronicas_22_a_Esdras_03.txt', 'AT_024_Esdras_04_a_Nehemias_11.txt',
+  'AT_025_Nehemias_12_a_Job_17.txt', 'AT_026_Job_18_a_Salmos_17.txt', 'AT_027_Salmos_18_a_Salmos_67.txt',
+  'AT_028_Salmos_68_a_Salmos_108.txt', 'AT_029_Salmos_109_a_Proverbios_09.txt', 'AT_030_Proverbios_10_a_Eclesiastes_07.txt',
+  'AT_031_Eclesiastes_08_a_Isaias_20.txt', 'AT_032_Isaias_21_a_Isaias_44.txt', 'AT_033_Isaias_45_a_Jeremias_04.txt',
+  'AT_034_Jeremias_05_a_Jeremias_24.txt', 'AT_035_Jeremias_25_a_Jeremias_42.txt', 'AT_036_Jeremias_43_a_Ezequiel_03.txt',
+  'AT_037_Ezequiel_04_a_Ezequiel_22.txt', 'AT_038_Ezequiel_23_a_Ezequiel_39.txt', 'AT_039_Ezequiel_40_a_Daniel_06.txt',
+  'AT_040_Daniel_07_a_Amos_06.txt', 'AT_041_Amos_07_a_Zacarias_07.txt', 'AT_042_Zacarias_08_a_Malaquias_04.txt',
+  'NT_001_Mateo_01_a_19.txt', 'NT_002_Mateo_20_a_Marcos_06.txt', 'NT_003_Marcos_07_a_Lucas_04.txt',
+  'NT_004_Lucas_05_a_18.txt', 'NT_005_Lucas_19_a_Juan_08.txt', 'NT_006_Juan_09_a_Hechos_04.txt',
+  'NT_007_Hechos_05_a_19.txt', 'NT_008_Hechos_20_a_Romanos_10.txt', 'NT_009_Romanos_11_a_2Corintios_02.txt',
+  'NT_010_2Corintios_03_a_Filipenses_04.txt', 'NT_011_Colosenses_a_Hebreos_08.txt', 'NT_012_Hebreos_09_a_3Juan.txt',
+  'NT_013_Judas_a_Apocalipsis.txt',
+];
+
 const VERSIONS = {
   vbl: {
     id: 'vbl', shortName: 'VBL', label: 'Versión Biblia Libre · VBL', folder: '', credit: '',
@@ -28,6 +50,10 @@ const VERSIONS = {
       ['NT_012_2Pedro_01_a_Apocalipsis_18.txt', '2 Pedro · 1–3 Juan · Judas · Apocalipsis 1–18'], ['NT_013_Apocalipsis_19_a_22.txt', 'Apocalipsis 19–22'],
     ],
   },
+  rvr1960: {
+    id: 'rvr1960', shortName: 'RVR1960', label: 'Reina-Valera 1960 · RVR1960', folder: 'rvr1960',
+    credit: 'Reina-Valera 1960 · Antiguo y Nuevo Testamento', readings: RVR1960_FILES,
+  },
 };
 
 const SETTINGS_KEY = 'lecturas-biblicas:settings';
@@ -54,7 +80,23 @@ const ui = {
 };
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
-function readingsFor(version = selectedVersion()) { return version.readings.map(([file, title], index) => ({ id: String(index + 1).padStart(3, '0'), file, title })); }
+function rvrTitle(file) {
+  const accents = { Genesis: 'Génesis', Exodo: 'Éxodo', Levitico: 'Levítico', Numeros: 'Números', Josue: 'Josué', Cronicas: 'Crónicas', Eclesiastes: 'Eclesiastés', Isaias: 'Isaías', Jeremias: 'Jeremías', Zacarias: 'Zacarías', Malaquias: 'Malaquías' };
+  const formatPart = (part) => {
+    let title = part.replace(/^([12])(?=[A-Z])/, '$1 ').replaceAll('_', ' ').replace(/\b0+(\d+)\b/g, '$1');
+    Object.entries(accents).forEach(([plain, accented]) => { title = title.replace(new RegExp(`\\b${plain}\\b`, 'g'), accented); });
+    return title;
+  };
+  return file.replace(/^(AT|NT)_\d{3}_/, '').replace(/\.txt$/, '').split('_a_').map(formatPart).join(' · ');
+}
+
+function readingsFor(version = selectedVersion()) {
+  return version.readings.map((entry, index) => {
+    const [file, title] = Array.isArray(entry) ? entry : [entry, rvrTitle(entry)];
+    const id = version.id === 'rvr1960' ? file.slice(0, 6).replace('_', ' ') : String(index + 1).padStart(3, '0');
+    return { id, file, title };
+  });
+}
 function progressKey(reading, version = selectedVersion()) { return `${PROGRESS_PREFIX}${version.id}:${reading.id}`; }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* Local storage may be unavailable. */ } }
 
@@ -94,7 +136,8 @@ function renderLibrary() {
     const button = document.createElement('button');
     button.className = 'reading-card';
     button.type = 'button';
-    button.innerHTML = `<span class="reading-number">${reading.id}</span><span><strong class="reading-name">${reading.title}</strong><small class="reading-progress">${saved ? formatProgress(percentage) : 'Comenzar lectura'}</small></span><span class="card-arrow" aria-hidden="true">›</span>`;
+    const numberClass = reading.id.includes(' ') ? 'reading-number reading-number-testament' : 'reading-number';
+    button.innerHTML = `<span class="${numberClass}">${reading.id}</span><span><strong class="reading-name">${reading.title}</strong><small class="reading-progress">${saved ? formatProgress(percentage) : 'Comenzar lectura'}</small></span><span class="card-arrow" aria-hidden="true">›</span>`;
     button.addEventListener('click', () => openReader(reading));
     return button;
   }));
@@ -109,10 +152,21 @@ function pause() {
   saveProgress();
 }
 
+function renderFocusedWord(word) {
+  const characters = Array.from(word);
+  const letterIndexes = characters.flatMap((character, index) => /\p{L}/u.test(character) ? [index] : []);
+  if (!letterIndexes.length) { ui.word.textContent = word; return; }
+  const pivotIndex = letterIndexes[Math.floor(letterIndexes.length / 3)];
+  const pivot = document.createElement('span');
+  pivot.className = 'word-pivot';
+  pivot.textContent = characters[pivotIndex];
+  ui.word.replaceChildren(characters.slice(0, pivotIndex).join(''), pivot, characters.slice(pivotIndex + 1).join(''));
+}
+
 function renderReader() {
   if (!words.length) return;
   position = clamp(position, 0, words.length - 1);
-  ui.word.textContent = words[position];
+  renderFocusedWord(words[position]);
   ui.progress.max = String(words.length - 1);
   ui.progress.value = String(position);
   ui.count.textContent = `${position + 1} / ${words.length}`;
@@ -206,4 +260,4 @@ document.querySelector('#fullscreen-button').addEventListener('click', async () 
 });
 
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=6'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=7'));
