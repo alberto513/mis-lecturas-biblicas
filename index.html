@@ -6,16 +6,24 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=4" />
-    <title>Mis Lecturas Bíblicas · VBL</title>
+    <link rel="stylesheet" href="./styles.css?v=6" />
+    <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
     <main class="app-shell">
       <section class="library-view" id="library-view" aria-labelledby="library-title">
         <header class="hero">
-          <span class="eyebrow">VERSIÓN BIBLIA LIBRE · VBL</span>
+          <span class="eyebrow">LECTURA PERSONAL</span>
           <h1 id="library-title">Mis Lecturas<br /><em>Bíblicas</em></h1>
           <p>Elige una lectura para comenzar.</p>
+          <label class="version-picker" for="version-select">
+            <span>Versión bíblica</span>
+            <select id="version-select" aria-label="Seleccionar versión bíblica">
+              <option value="vbl">Versión Biblia Libre · VBL</option>
+              <option value="pddpt">Palabra de Dios para ti · PdDpt</option>
+            </select>
+          </label>
+          <p class="version-credit" id="version-credit"></p>
         </header>
 
         <div class="library-status" id="library-status" aria-live="polite"></div>
@@ -54,6 +62,6 @@
       </section>
     </main>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
-    <script type="module" src="./app.js?v=4"></script>
+    <script type="module" src="./app.js?v=6"></script>
   </body>
 </html>
