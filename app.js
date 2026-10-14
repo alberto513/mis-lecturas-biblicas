@@ -34,7 +34,7 @@ const ui = {
   library: document.querySelector('#library-view'), reader: document.querySelector('#reader-view'), grid: document.querySelector('#reading-grid'),
   status: document.querySelector('#library-status'), title: document.querySelector('#reader-title'), word: document.querySelector('#word-display'),
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
-  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), timeRemaining: document.querySelector('#time-remaining'),
+  play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'),
 };
 
 function progressFor(reading) {
@@ -88,8 +88,7 @@ function renderReader() {
   ui.progress.value = String(position);
   ui.count.textContent = `${position + 1} / ${words.length}`;
   ui.progressLabel.textContent = formatProgress(((position + 1) / words.length) * 100);
-  ui.speed.textContent = `${settings.speed} palabras por minuto`;
-  ui.timeRemaining.textContent = `Tiempo restante: ${formatDuration(remainingDuration())}`;
+  ui.speed.textContent = `${settings.speed} palabras por minuto\nTiempo restante: ${formatDuration(remainingDuration())}`;
   document.documentElement.style.setProperty('--reader-word-size', settings.fontSize);
   ui.word.style.fontSize = `clamp(${2.9 + settings.fontSize * .28}rem, ${13 + settings.fontSize}vw, ${6.8 + settings.fontSize * .4}rem)`;
 }
@@ -171,4 +170,4 @@ document.querySelector('#fullscreen-button').addEventListener('click', async () 
 });
 
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=4'));

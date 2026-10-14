@@ -62,8 +62,7 @@ h1 em { color: var(--gold-soft); font-weight: 400; }
 .round-button { width: clamp(2.9rem, 12vw, 3.8rem); height: clamp(2.9rem, 12vw, 3.8rem); border-radius: 50%; font-size: 1.35rem; line-height: .8; }
 .round-button small { color: var(--muted); font-size: .48rem; margin-top: -.25rem; }
 .play-button { width: clamp(4.5rem, 18vw, 5.6rem); height: clamp(4.5rem, 18vw, 5.6rem); border-radius: 50%; border-color: var(--gold); background: linear-gradient(135deg, #d5af62, #9e7435); color: #120e07; font-size: 1.7rem; box-shadow: 0 0 2rem rgba(213, 175, 98, .2); }
-.speed { margin: 0; color: var(--gold-soft); text-align: center; font-size: .85rem; }
-.time-remaining { margin: .65rem 0 0; color: var(--gold-soft); text-align: center; font-size: .95rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.speed { margin: 0; color: var(--gold-soft); text-align: center; font-size: .9rem; font-weight: 650; line-height: 1.65; font-variant-numeric: tabular-nums; white-space: pre-line; }
 
 :fullscreen { background: var(--ink); }
 :fullscreen .app-shell { max-width: 58rem; }
