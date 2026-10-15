@@ -63,7 +63,9 @@ const FOCUS_RESULTS_KEY = 'lecturas-biblicas:focus-results';
 const ATMOSPHERE_SETTINGS_KEY = 'lecturas-biblicas:atmosphere-settings';
 const ATMOSPHERE_CATALOG = [
   { id: 'desierto-alba', title: 'Desierto del alba', file: 'desierto-del-alba.png', category: 'paisajes', tags: ['antiguo', 'genesis', 'exodo', 'salmos', 'desierto'], accent: '#d8a454', surface: 'rgba(17, 12, 7, .89)' },
+  { id: 'sinai-moise', title: 'Sinaí · escena inspirada en Moisés', file: 'sinai-moise.png', category: 'antiguo', tags: ['antiguo', 'exodo', 'deuteronomio', 'moises', 'sinai'], accent: '#ce9255', surface: 'rgba(18, 10, 7, .89)' },
   { id: 'galilea-azul', title: 'Galilea azul', file: 'galilea-azul.png', category: 'paisajes', tags: ['nuevo', 'mateo', 'marcos', 'lucas', 'juan', 'hechos', 'galilea'], accent: '#78b6d4', surface: 'rgba(5, 13, 22, .89)' },
+  { id: 'ensenanza-galilea', title: 'Galilea · escena de enseñanza', file: 'ensenanza-galilea.png', category: 'nuevo', tags: ['nuevo', 'mateo', 'marcos', 'lucas', 'juan', 'jesus', 'galilea'], accent: '#caa965', surface: 'rgba(16, 14, 8, .89)' },
   { id: 'jerusalen-amanecer', title: 'Jerusalén al amanecer', file: 'jerusalen-amanecer.png', category: 'paisajes', tags: ['antiguo', 'nuevo', 'salmos', 'mateo', 'marcos', 'lucas', 'juan', 'hechos', 'jerusalen'], accent: '#e5b66b', surface: 'rgba(19, 12, 6, .88)' },
   { id: 'vision-celestial', title: 'Visión celestial', file: 'vision-celestial.png', category: 'celestial', tags: ['celestial', 'daniel', 'ezequiel', 'apocalipsis'], accent: '#a6b9ef', surface: 'rgba(5, 9, 20, .88)' },
 ];
@@ -773,4 +775,4 @@ if (hasFocusPanel) {
 }
 window.addEventListener('pagehide', () => { stopFocusAudio(); clearAtmosphereTimer(); });
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=16'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=17'));
