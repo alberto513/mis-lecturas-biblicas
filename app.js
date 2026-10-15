@@ -67,7 +67,7 @@ try { settings = { ...settings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)
 if (!VERSIONS[settings.versionId]) settings.versionId = 'vbl';
 settings.fontSize = clamp(Number(settings.fontSize) || 10, 1, 20);
 
-let focusSettings = { mode: 'silence', betaFrequency: 18, masterVolume: .4, toneVolume: .18, musicVolume: .35, musicEnabled: false, sessionMinutes: 60, youtubeUrl: '' };
+let focusSettings = { mode: 'silence', betaFrequency: 18, masterVolume: .4, toneVolume: .18, musicVolume: .35, musicEnabled: false, musicTrack: '', sessionMinutes: 60, youtubeUrl: '' };
 try { focusSettings = { ...focusSettings, ...JSON.parse(localStorage.getItem(FOCUS_SETTINGS_KEY) || '{}') }; } catch { /* Local storage may be unavailable. */ }
 focusSettings.mode = ['beta', 'gamma', 'instrumental', 'silence'].includes(focusSettings.mode) ? focusSettings.mode : 'silence';
 focusSettings.betaFrequency = clamp(Number(focusSettings.betaFrequency) || 18, 14, 20);
@@ -93,7 +93,7 @@ const ui = {
   focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'),
   betaFrequency: document.querySelector('#beta-frequency'), betaFrequencyValue: document.querySelector('#beta-frequency-value'), masterVolume: document.querySelector('#master-volume'), masterVolumeValue: document.querySelector('#master-volume-value'),
   toneVolume: document.querySelector('#tone-volume'), toneVolumeValue: document.querySelector('#tone-volume-value'), musicVolume: document.querySelector('#music-volume'), musicVolumeValue: document.querySelector('#music-volume-value'),
-  musicFile: document.querySelector('#music-file'), musicFileName: document.querySelector('#music-file-name'), musicEnabled: document.querySelector('#music-enabled'),
+  musicLibrary: document.querySelector('#music-library'), musicFile: document.querySelector('#music-file'), musicFileName: document.querySelector('#music-file-name'), musicEnabled: document.querySelector('#music-enabled'),
   sessionClock: document.querySelector('#session-clock'), audioPlay: document.querySelector('#audio-play-button'), toneNote: document.querySelector('#tone-note'), sessionSummary: document.querySelector('#session-summary'),
   youtubeUrl: document.querySelector('#youtube-url'), youtubeShow: document.querySelector('#youtube-show'), youtubeClear: document.querySelector('#youtube-clear'), youtubePlayer: document.querySelector('#youtube-player'),
   evaluationDialog: document.querySelector('#evaluation-dialog'), evaluationForm: document.querySelector('#evaluation-form'), evaluationMode: document.querySelector('#evaluation-mode'),
@@ -166,6 +166,7 @@ function renderFocusPanel() {
   ui.toneVolumeValue.value = percentage(focusSettings.toneVolume);
   ui.musicVolumeValue.value = percentage(focusSettings.musicVolume);
   ui.musicEnabled.checked = focusSettings.musicEnabled;
+  ui.musicLibrary.value = focusSettings.musicTrack;
   ui.youtubeUrl.value = focusSettings.youtubeUrl;
   document.querySelectorAll('[data-audio-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.audioMode === focusSettings.mode)));
   document.querySelectorAll('[data-session-minutes]').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.sessionMinutes) === focusSettings.sessionMinutes)));
@@ -252,6 +253,20 @@ function connectMusic() {
   if (!focusAudio.context || focusAudio.musicSource) return;
   focusAudio.musicSource = focusAudio.context.createMediaElementSource(focusAudio.musicElement);
   focusAudio.musicSource.connect(focusAudio.musicGain);
+}
+
+function setMusicSource(source, label, objectUrl = null) {
+  if (focusAudio.fileUrl && focusAudio.fileUrl !== objectUrl) URL.revokeObjectURL(focusAudio.fileUrl);
+  focusAudio.fileUrl = objectUrl;
+  focusAudio.musicElement.pause();
+  if (source) {
+    focusAudio.musicElement.src = source;
+    focusAudio.musicElement.loop = true;
+  } else {
+    focusAudio.musicElement.removeAttribute('src');
+    focusAudio.musicElement.load();
+  }
+  ui.musicFileName.textContent = label || 'Todavía no elegiste un archivo.';
 }
 
 function syncMusic() {
@@ -516,15 +531,24 @@ if (hasFocusPanel) {
     renderFocusPanel();
   }));
   ui.musicEnabled.addEventListener('change', () => { focusSettings.musicEnabled = ui.musicEnabled.checked; saveFocusSettings(); if (focusAudio.running) syncMusic(); renderFocusPanel(); });
+  ui.musicLibrary.addEventListener('change', () => {
+    const source = ui.musicLibrary.value;
+    const label = source ? ui.musicLibrary.selectedOptions[0].textContent : '';
+    focusSettings.musicTrack = source;
+    setMusicSource(source, label);
+    if (source) { focusSettings.mode = 'instrumental'; focusSettings.musicEnabled = true; }
+    saveFocusSettings();
+    if (focusAudio.running) { configureTones(); syncMusic(); }
+    renderFocusPanel();
+  });
   ui.musicFile.addEventListener('change', () => {
     const [file] = ui.musicFile.files;
     if (!file) return;
-    if (focusAudio.fileUrl) URL.revokeObjectURL(focusAudio.fileUrl);
-    focusAudio.fileUrl = URL.createObjectURL(file);
-    focusAudio.musicElement.src = focusAudio.fileUrl;
-    focusAudio.musicElement.loop = true;
-    ui.musicFileName.textContent = file.name;
-    if (focusSettings.mode === 'instrumental') focusSettings.musicEnabled = true;
+    const objectUrl = URL.createObjectURL(file);
+    focusSettings.musicTrack = '';
+    setMusicSource(objectUrl, file.name, objectUrl);
+    focusSettings.mode = 'instrumental';
+    focusSettings.musicEnabled = true;
     saveFocusSettings();
     if (focusAudio.running) syncMusic();
     renderFocusPanel();
@@ -550,9 +574,12 @@ if (hasFocusPanel) {
   });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && focusAudio.running) pauseFocusAudio(); });
+  const savedTrack = Array.from(ui.musicLibrary.options).find((option) => option.value === focusSettings.musicTrack);
+  if (savedTrack) setMusicSource(savedTrack.value, savedTrack.textContent);
+  else focusSettings.musicTrack = '';
   focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
   renderFocusPanel();
 }
 window.addEventListener('pagehide', stopFocusAudio);
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=11'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=13'));

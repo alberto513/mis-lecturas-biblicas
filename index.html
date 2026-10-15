@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=12" />
+    <link rel="stylesheet" href="./styles.css?v=13" />
     <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
@@ -88,6 +88,7 @@
             <label class="audio-control" for="master-volume"><span>Volumen general <output id="master-volume-value">40%</output></span><input id="master-volume" type="range" min="0" max="100" value="40" step="1" /></label>
             <label class="audio-control" for="tone-volume"><span>Volumen de tonos <output id="tone-volume-value">18%</output></span><input id="tone-volume" type="range" min="0" max="100" value="18" step="1" /></label>
             <label class="audio-control" for="music-volume"><span>Volumen de música <output id="music-volume-value">35%</output></span><input id="music-volume" type="range" min="0" max="100" value="35" step="1" /></label>
+            <label class="music-library" for="music-library"><span>Biblioteca propia original</span><select id="music-library"><option value="">Elegir ambiente</option><option value="./assets/audio/Ritmo_Activo_108_BPM_original.wav">Ritmo activo · 108 BPM</option><option value="./assets/audio/Impulso_Estable_120_BPM_original.wav">Impulso estable · 120 BPM</option></select><small>Sin voces · creados para comparar concentración y silencio.</small></label>
             <label class="music-upload" for="music-file"><span>Archivo instrumental propio o con licencia</span><input id="music-file" type="file" accept="audio/*" /><small id="music-file-name">Todavía no elegiste un archivo.</small></label>
             <label class="music-enabled"><input id="music-enabled" type="checkbox" /> Reproducir música junto con beta o gamma</label>
           </section>
@@ -124,6 +125,6 @@
       </form>
     </dialog>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
-    <script type="module" src="./app.js?v=12"></script>
+    <script type="module" src="./app.js?v=13"></script>
   </body>
 </html>
