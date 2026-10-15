@@ -58,6 +58,8 @@ const VERSIONS = {
 
 const SETTINGS_KEY = 'lecturas-biblicas:settings';
 const PROGRESS_PREFIX = 'lecturas-biblicas:progress:';
+const FOCUS_SETTINGS_KEY = 'lecturas-biblicas:focus-settings';
+const FOCUS_RESULTS_KEY = 'lecturas-biblicas:focus-results';
 const clamp = (number, minimum, maximum) => Math.min(maximum, Math.max(minimum, number));
 
 let settings = { speed: 250, fontSize: 10, versionId: 'vbl' };
@@ -65,12 +67,22 @@ try { settings = { ...settings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)
 if (!VERSIONS[settings.versionId]) settings.versionId = 'vbl';
 settings.fontSize = clamp(Number(settings.fontSize) || 10, 1, 20);
 
+let focusSettings = { mode: 'silence', betaFrequency: 18, masterVolume: .4, toneVolume: .18, musicVolume: .35, musicEnabled: false, sessionMinutes: 60, youtubeUrl: '' };
+try { focusSettings = { ...focusSettings, ...JSON.parse(localStorage.getItem(FOCUS_SETTINGS_KEY) || '{}') }; } catch { /* Local storage may be unavailable. */ }
+focusSettings.mode = ['beta', 'gamma', 'instrumental', 'silence'].includes(focusSettings.mode) ? focusSettings.mode : 'silence';
+focusSettings.betaFrequency = clamp(Number(focusSettings.betaFrequency) || 18, 14, 20);
+focusSettings.masterVolume = clamp(Number(focusSettings.masterVolume), 0, 1);
+focusSettings.toneVolume = clamp(Number(focusSettings.toneVolume), 0, 1);
+focusSettings.musicVolume = clamp(Number(focusSettings.musicVolume), 0, 1);
+focusSettings.sessionMinutes = [30, 45, 60].includes(Number(focusSettings.sessionMinutes)) ? Number(focusSettings.sessionMinutes) : 60;
+
 let activeReading = null;
 let activeVersion = null;
 let words = [];
 let position = 0;
 let isPlaying = false;
 let timer = null;
+let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, oscillators: [], musicElement: new Audio(), musicSource: null, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
 
 const ui = {
   library: document.querySelector('#library-view'), reader: document.querySelector('#reader-view'), grid: document.querySelector('#reading-grid'),
@@ -78,6 +90,13 @@ const ui = {
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
   play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), fontSize: document.querySelector('#font-size-label'), versionSelect: document.querySelector('#version-select'),
   versionCredit: document.querySelector('#version-credit'),
+  focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'),
+  betaFrequency: document.querySelector('#beta-frequency'), betaFrequencyValue: document.querySelector('#beta-frequency-value'), masterVolume: document.querySelector('#master-volume'), masterVolumeValue: document.querySelector('#master-volume-value'),
+  toneVolume: document.querySelector('#tone-volume'), toneVolumeValue: document.querySelector('#tone-volume-value'), musicVolume: document.querySelector('#music-volume'), musicVolumeValue: document.querySelector('#music-volume-value'),
+  musicFile: document.querySelector('#music-file'), musicFileName: document.querySelector('#music-file-name'), musicEnabled: document.querySelector('#music-enabled'),
+  sessionClock: document.querySelector('#session-clock'), audioPlay: document.querySelector('#audio-play-button'), toneNote: document.querySelector('#tone-note'), sessionSummary: document.querySelector('#session-summary'),
+  youtubeUrl: document.querySelector('#youtube-url'), youtubeShow: document.querySelector('#youtube-show'), youtubeClear: document.querySelector('#youtube-clear'), youtubePlayer: document.querySelector('#youtube-player'),
+  evaluationDialog: document.querySelector('#evaluation-dialog'), evaluationForm: document.querySelector('#evaluation-form'), evaluationMode: document.querySelector('#evaluation-mode'),
 };
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
@@ -124,6 +143,205 @@ function formatDuration(milliseconds) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes} min ${String(seconds).padStart(2, '0')} s`;
+}
+
+function saveFocusSettings() { try { localStorage.setItem(FOCUS_SETTINGS_KEY, JSON.stringify(focusSettings)); } catch { /* The panel remains usable if storage is blocked. */ } }
+function modeName(mode = focusSettings.mode) { return ({ beta: 'Alerta activa · beta', gamma: 'Concentración experimental · gamma', instrumental: 'Energía instrumental', silence: 'Silencio' })[mode]; }
+function sessionModeName() { return `${modeName()}${focusSettings.musicEnabled && focusSettings.mode !== 'instrumental' ? ' + música' : ''}`; }
+function formatSessionTime(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
+function currentSessionRemaining() { return focusAudio.running ? Math.max(0, focusAudio.remainingMs - (Date.now() - focusAudio.startedAt)) : focusAudio.remainingMs; }
+function toneMode() { return ['beta', 'gamma'].includes(focusSettings.mode) ? focusSettings.mode : null; }
+function delay(milliseconds) { return new Promise((resolve) => window.setTimeout(resolve, milliseconds)); }
+
+function renderFocusPanel() {
+  const percentage = (value) => `${Math.round(value * 100)}%`;
+  ui.betaFrequency.value = String(focusSettings.betaFrequency);
+  ui.betaFrequencyValue.value = `${focusSettings.betaFrequency} Hz`;
+  ui.masterVolume.value = String(Math.round(focusSettings.masterVolume * 100));
+  ui.toneVolume.value = String(Math.round(focusSettings.toneVolume * 100));
+  ui.musicVolume.value = String(Math.round(focusSettings.musicVolume * 100));
+  ui.masterVolumeValue.value = percentage(focusSettings.masterVolume);
+  ui.toneVolumeValue.value = percentage(focusSettings.toneVolume);
+  ui.musicVolumeValue.value = percentage(focusSettings.musicVolume);
+  ui.musicEnabled.checked = focusSettings.musicEnabled;
+  ui.youtubeUrl.value = focusSettings.youtubeUrl;
+  document.querySelectorAll('[data-audio-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.audioMode === focusSettings.mode)));
+  document.querySelectorAll('[data-session-minutes]').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.sessionMinutes) === focusSettings.sessionMinutes)));
+  ui.toneNote.textContent = focusSettings.mode === 'gamma'
+    ? 'Gamma de 40 Hz es un modo experimental. Mantén el volumen bajo; no garantiza una mejora cognitiva.'
+    : 'Para tonos binaurales beta usa auriculares. Es una opción de prueba; no garantiza un efecto específico.';
+  ui.audioStatus.textContent = focusAudio.running ? `${sessionModeName()} · sesión en curso` : `${modeName()} · listo para comparar tu lectura.`;
+  ui.audioPlay.textContent = focusAudio.running ? '❚❚ Pausar ambiente' : '▶ Iniciar ambiente';
+  ui.sessionClock.textContent = formatSessionTime(currentSessionRemaining() || (focusSettings.sessionMinutes * 60000));
+  renderSessionSummary();
+}
+
+function setFocusPanel(open) {
+  ui.focusPanel.classList.toggle('is-hidden', !open);
+  ui.focusPanel.setAttribute('aria-hidden', String(!open));
+  ui.focusToggle.setAttribute('aria-expanded', String(open));
+  if (open) { renderFocusPanel(); ui.focusClose.focus(); }
+  else ui.focusToggle.focus();
+}
+
+function ensureAudioGraph() {
+  if (focusAudio.context) return focusAudio.context;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) throw new Error('Este navegador no admite audio web.');
+  const context = new AudioContextClass();
+  const masterGain = context.createGain();
+  const toneGain = context.createGain();
+  const musicGain = context.createGain();
+  masterGain.gain.value = 0;
+  toneGain.gain.value = 0;
+  musicGain.gain.value = 0;
+  toneGain.connect(masterGain);
+  musicGain.connect(masterGain);
+  masterGain.connect(context.destination);
+  focusAudio = { ...focusAudio, context, masterGain, toneGain, musicGain };
+  return context;
+}
+
+function ramp(gainNode, value, seconds = .18) {
+  if (!gainNode || !focusAudio.context) return;
+  const now = focusAudio.context.currentTime;
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+  gainNode.gain.linearRampToValueAtTime(value, now + seconds);
+}
+
+function stopOscillators() {
+  focusAudio.oscillators.forEach(({ oscillator, panner }) => {
+    try { oscillator.stop(); oscillator.disconnect(); panner.disconnect(); } catch { /* Nodes may already be stopped. */ }
+  });
+  focusAudio.oscillators = [];
+}
+
+function createBinauralPair(leftFrequency, rightFrequency) {
+  const context = focusAudio.context;
+  const createTone = (frequency, pan) => {
+    const oscillator = context.createOscillator();
+    const panner = context.createStereoPanner ? context.createStereoPanner() : context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    if ('pan' in panner) panner.pan.value = pan;
+    oscillator.connect(panner).connect(focusAudio.toneGain);
+    oscillator.start();
+    return { oscillator, panner };
+  };
+  focusAudio.oscillators = [createTone(leftFrequency, -1), createTone(rightFrequency, 1)];
+}
+
+async function configureTones() {
+  if (!focusAudio.context) return;
+  const revision = ++focusAudio.toneRevision;
+  ramp(focusAudio.toneGain, 0, .14);
+  await delay(160);
+  if (revision !== focusAudio.toneRevision) return;
+  stopOscillators();
+  if (!focusAudio.running || !toneMode()) return;
+  if (focusSettings.mode === 'beta') createBinauralPair(220, 220 + focusSettings.betaFrequency);
+  if (focusSettings.mode === 'gamma') createBinauralPair(220, 260);
+  ramp(focusAudio.toneGain, focusSettings.toneVolume, .22);
+}
+
+function connectMusic() {
+  if (!focusAudio.context || focusAudio.musicSource) return;
+  focusAudio.musicSource = focusAudio.context.createMediaElementSource(focusAudio.musicElement);
+  focusAudio.musicSource.connect(focusAudio.musicGain);
+}
+
+function syncMusic() {
+  if (!focusAudio.context) return;
+  const canPlay = focusAudio.running && focusSettings.musicEnabled && Boolean(focusAudio.musicElement.src);
+  ramp(focusAudio.musicGain, canPlay ? focusSettings.musicVolume : 0, .18);
+  if (canPlay) focusAudio.musicElement.play().catch(() => { ui.audioStatus.textContent = 'El navegador no pudo iniciar el archivo de música.'; });
+  else focusAudio.musicElement.pause();
+}
+
+function clearSessionInterval() { if (focusAudio.interval) { window.clearInterval(focusAudio.interval); focusAudio.interval = null; } }
+function tickSessionClock() {
+  const remaining = currentSessionRemaining();
+  ui.sessionClock.textContent = formatSessionTime(remaining);
+  if (remaining <= 0) finishFocusSession();
+}
+function beginSessionClock() {
+  if (!focusAudio.remainingMs) focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
+  focusAudio.startedAt = Date.now();
+  clearSessionInterval();
+  tickSessionClock();
+  focusAudio.interval = window.setInterval(tickSessionClock, 1000);
+}
+function pauseSessionClock() {
+  if (focusAudio.running) focusAudio.remainingMs = currentSessionRemaining();
+  clearSessionInterval();
+}
+
+async function startFocusAudio() {
+  try {
+    const context = ensureAudioGraph();
+    await context.resume();
+    connectMusic();
+    if (!focusAudio.remainingMs) focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
+    focusAudio.running = true;
+    focusAudio.sessionMode = sessionModeName();
+    ramp(focusAudio.masterGain, focusSettings.masterVolume, .22);
+    configureTones();
+    syncMusic();
+    beginSessionClock();
+    renderFocusPanel();
+  } catch (error) { ui.audioStatus.textContent = error.message || 'No se pudo iniciar el ambiente.'; }
+}
+
+function pauseFocusAudio() {
+  if (!focusAudio.running) return;
+  pauseSessionClock();
+  focusAudio.running = false;
+  ramp(focusAudio.masterGain, 0, .18);
+  focusAudio.musicElement.pause();
+  window.setTimeout(() => focusAudio.context?.suspend().catch(() => {}), 220);
+  renderFocusPanel();
+}
+
+function finishFocusSession() {
+  if (!focusAudio.running) return;
+  const completedMode = focusAudio.sessionMode;
+  focusAudio.remainingMs = 0;
+  pauseFocusAudio();
+  ui.evaluationMode.textContent = `Modo de esta sesión: ${completedMode}.`;
+  if (typeof ui.evaluationDialog.showModal === 'function') ui.evaluationDialog.showModal();
+}
+
+function stopFocusAudio() {
+  pauseFocusAudio();
+  clearSessionInterval();
+  stopOscillators();
+  if (focusAudio.fileUrl) URL.revokeObjectURL(focusAudio.fileUrl);
+}
+
+function readFocusResults() { try { return JSON.parse(localStorage.getItem(FOCUS_RESULTS_KEY) || '[]'); } catch { return []; } }
+function renderSessionSummary() {
+  const results = readFocusResults();
+  if (!results.length) { ui.sessionSummary.textContent = 'Aún no hay sesiones evaluadas.'; return; }
+  const averageFocus = Math.round(results.reduce((sum, result) => sum + result.focus, 0) / results.length * 10) / 10;
+  ui.sessionSummary.textContent = `${results.length} sesión${results.length === 1 ? '' : 'es'} guardada${results.length === 1 ? '' : 's'} · concentración media ${averageFocus}/10.`;
+}
+
+function youtubeId(value) {
+  try {
+    const url = new URL(value);
+    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1).match(/^[\w-]{11}$/)?.[0] || null;
+    if (url.hostname.includes('youtube.com')) return (url.searchParams.get('v') || url.pathname.split('/').pop()).match(/^[\w-]{11}$/)?.[0] || null;
+  } catch { /* Invalid URLs are handled by the caller. */ }
+  return null;
+}
+
+function showYoutubeReference() {
+  const id = youtubeId(ui.youtubeUrl.value.trim());
+  if (!id) { ui.audioStatus.textContent = 'Pega un enlace válido de YouTube para mostrar la referencia oficial.'; return; }
+  focusSettings.youtubeUrl = ui.youtubeUrl.value.trim();
+  saveFocusSettings();
+  ui.youtubePlayer.replaceChildren(Object.assign(document.createElement('iframe'), { src: `https://www.youtube-nocookie.com/embed/${id}?rel=0`, title: 'Referencia de YouTube', allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share', allowFullscreen: true }));
 }
 
 function renderLibrary() {
@@ -239,6 +457,7 @@ async function openReader(reading) {
 
 function showLibrary() {
   pause();
+  pauseFocusAudio();
   ui.reader.classList.add('is-hidden');
   ui.library.classList.remove('is-hidden');
   renderLibrary();
@@ -261,5 +480,85 @@ document.querySelector('#fullscreen-button').addEventListener('click', async () 
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch { /* Some mobile browsers intentionally do not support fullscreen. */ }
 });
 
+function selectFocusMode(mode) {
+  focusSettings.mode = mode;
+  if (mode === 'instrumental') focusSettings.musicEnabled = true;
+  if (mode === 'silence') focusSettings.musicEnabled = false;
+  saveFocusSettings();
+  if (focusAudio.running) { configureTones(); syncMusic(); }
+  renderFocusPanel();
+}
+
+ui.focusToggle.addEventListener('click', () => setFocusPanel(ui.focusPanel.classList.contains('is-hidden')));
+ui.focusClose.addEventListener('click', () => setFocusPanel(false));
+document.querySelectorAll('[data-audio-mode]').forEach((button) => button.addEventListener('click', () => selectFocusMode(button.dataset.audioMode)));
+document.querySelectorAll('[data-session-minutes]').forEach((button) => button.addEventListener('click', () => {
+  focusSettings.sessionMinutes = Number(button.dataset.sessionMinutes);
+  focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
+  if (focusAudio.running) focusAudio.startedAt = Date.now();
+  saveFocusSettings();
+  renderFocusPanel();
+}));
+ui.betaFrequency.addEventListener('input', () => {
+  focusSettings.betaFrequency = Number(ui.betaFrequency.value);
+  saveFocusSettings();
+  if (focusAudio.running && focusSettings.mode === 'beta') configureTones();
+  renderFocusPanel();
+});
+[
+  [ui.masterVolume, 'masterVolume', (value) => ramp(focusAudio.masterGain, value, .12)],
+  [ui.toneVolume, 'toneVolume', (value) => ramp(focusAudio.toneGain, toneMode() ? value : 0, .12)],
+  [ui.musicVolume, 'musicVolume', (value) => syncMusic()],
+].forEach(([input, property, apply]) => input.addEventListener('input', () => {
+  focusSettings[property] = Number(input.value) / 100;
+  saveFocusSettings();
+  if (focusAudio.running) apply(focusSettings[property]);
+  renderFocusPanel();
+}));
+ui.musicEnabled.addEventListener('change', () => {
+  focusSettings.musicEnabled = ui.musicEnabled.checked;
+  saveFocusSettings();
+  if (focusAudio.running) syncMusic();
+  renderFocusPanel();
+});
+ui.musicFile.addEventListener('change', () => {
+  const [file] = ui.musicFile.files;
+  if (!file) return;
+  if (focusAudio.fileUrl) URL.revokeObjectURL(focusAudio.fileUrl);
+  focusAudio.fileUrl = URL.createObjectURL(file);
+  focusAudio.musicElement.src = focusAudio.fileUrl;
+  focusAudio.musicElement.loop = true;
+  ui.musicFileName.textContent = file.name;
+  if (focusSettings.mode === 'instrumental') focusSettings.musicEnabled = true;
+  saveFocusSettings();
+  if (focusAudio.running) syncMusic();
+  renderFocusPanel();
+});
+ui.audioPlay.addEventListener('click', () => focusAudio.running ? pauseFocusAudio() : startFocusAudio());
+ui.youtubeShow.addEventListener('click', showYoutubeReference);
+ui.youtubeClear.addEventListener('click', () => { ui.youtubePlayer.replaceChildren(); ui.youtubeUrl.value = ''; focusSettings.youtubeUrl = ''; saveFocusSettings(); });
+ui.youtubeUrl.addEventListener('change', () => { focusSettings.youtubeUrl = ui.youtubeUrl.value.trim(); saveFocusSettings(); });
+
+['sleep-score', 'focus-score', 'understanding-score'].forEach((id) => {
+  const input = document.querySelector(`#${id}`);
+  const output = document.querySelector(`#${id}-value`);
+  input.addEventListener('input', () => { output.value = input.value; });
+});
+ui.evaluationForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (event.submitter?.value === 'save') {
+    const data = new FormData(ui.evaluationForm);
+    const result = { completedAt: Date.now(), mode: focusAudio.sessionMode, sleep: Number(data.get('sleep')), focus: Number(data.get('focus')), distractions: Math.max(0, Number(data.get('distractions')) || 0), understanding: Number(data.get('understanding')) };
+    try { const results = readFocusResults(); results.push(result); localStorage.setItem(FOCUS_RESULTS_KEY, JSON.stringify(results.slice(-100))); } catch { /* The evaluation is optional. */ }
+  }
+  ui.evaluationDialog.close();
+  renderFocusPanel();
+});
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && focusAudio.running) pauseFocusAudio(); });
+window.addEventListener('pagehide', stopFocusAudio);
+
+focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
+renderFocusPanel();
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=10'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=11'));

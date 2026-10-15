@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=10" />
+    <link rel="stylesheet" href="./styles.css?v=11" />
     <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
@@ -35,7 +35,10 @@
         <header class="reader-header">
           <button class="text-button" id="back-button" type="button" aria-label="Volver a las lecturas">← Lecturas</button>
           <p class="reader-book" id="reader-title"></p>
-          <button class="icon-button" id="fullscreen-button" type="button" aria-label="Abrir pantalla completa" title="Pantalla completa">⛶</button>
+          <div class="reader-actions">
+            <button class="focus-toggle" id="focus-panel-button" type="button" aria-expanded="false" aria-controls="focus-panel">Concentración</button>
+            <button class="icon-button" id="fullscreen-button" type="button" aria-label="Abrir pantalla completa" title="Pantalla completa">⛶</button>
+          </div>
         </header>
 
         <div class="reader-stage">
@@ -62,9 +65,65 @@
           <p class="speed" id="speed-label" aria-live="polite">250 palabras por minuto<br />Tiempo restante: —</p>
           <p class="font-size-indicator" aria-live="polite">Tamaño de letra: <output id="font-size-label">10</output> / 20</p>
         </section>
+
+        <aside class="focus-panel is-hidden" id="focus-panel" aria-label="Mezclador de concentración" aria-hidden="true">
+          <header class="focus-panel-header">
+            <div><span class="panel-eyebrow">LECTURA ACTIVA</span><h2>Concentración</h2></div>
+            <button class="panel-close" id="focus-panel-close" type="button" aria-label="Cerrar mezclador de concentración">×</button>
+          </header>
+          <p class="audio-status" id="audio-status" aria-live="polite">Silencio · compara tu lectura sin sonido.</p>
+
+          <div class="mode-selector" role="group" aria-label="Modo de sonido">
+            <button class="mode-button" type="button" data-audio-mode="beta" aria-pressed="false"><strong>Alerta activa</strong><small>Beta · 18 Hz</small></button>
+            <button class="mode-button" type="button" data-audio-mode="gamma" aria-pressed="false"><strong>Concentración</strong><small>Gamma · 40 Hz experimental</small></button>
+            <button class="mode-button" type="button" data-audio-mode="instrumental" aria-pressed="false"><strong>Energía instrumental</strong><small>Tu archivo autorizado</small></button>
+            <button class="mode-button" type="button" data-audio-mode="silence" aria-pressed="true"><strong>Silencio</strong><small>Sin sonidos</small></button>
+          </div>
+
+          <label class="audio-control" for="beta-frequency"><span>Frecuencia beta <output id="beta-frequency-value">18 Hz</output></span><input id="beta-frequency" type="range" min="14" max="20" value="18" step="1" /></label>
+          <p class="audio-note" id="tone-note">Para tonos binaurales beta usa auriculares. Es una opción de prueba; no garantiza un efecto específico.</p>
+
+          <section class="mixer-section" aria-labelledby="mixer-title">
+            <h3 id="mixer-title">Mezclador</h3>
+            <label class="audio-control" for="master-volume"><span>Volumen general <output id="master-volume-value">40%</output></span><input id="master-volume" type="range" min="0" max="100" value="40" step="1" /></label>
+            <label class="audio-control" for="tone-volume"><span>Volumen de tonos <output id="tone-volume-value">18%</output></span><input id="tone-volume" type="range" min="0" max="100" value="18" step="1" /></label>
+            <label class="audio-control" for="music-volume"><span>Volumen de música <output id="music-volume-value">35%</output></span><input id="music-volume" type="range" min="0" max="100" value="35" step="1" /></label>
+            <label class="music-upload" for="music-file"><span>Archivo instrumental propio o con licencia</span><input id="music-file" type="file" accept="audio/*" /><small id="music-file-name">Todavía no elegiste un archivo.</small></label>
+            <label class="music-enabled"><input id="music-enabled" type="checkbox" /> Reproducir música junto con beta o gamma</label>
+          </section>
+
+          <section class="session-section" aria-labelledby="session-title">
+            <h3 id="session-title">Sesión</h3>
+            <div class="timer-options" role="group" aria-label="Duración de sesión"><button type="button" data-session-minutes="30">30 min</button><button type="button" data-session-minutes="45">45 min</button><button type="button" data-session-minutes="60" aria-pressed="true">60 min</button></div>
+            <p class="session-clock" id="session-clock" aria-live="polite">60:00</p>
+            <button class="audio-play" id="audio-play-button" type="button">▶ Iniciar ambiente</button>
+          </section>
+
+          <details class="youtube-references">
+            <summary>Referencias de YouTube (opcional)</summary>
+            <p>Se abre el reproductor oficial solo para comparar referencias. No se extrae ni mezcla su audio.</p>
+            <label for="youtube-url">Enlace de YouTube<input id="youtube-url" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" /></label>
+            <div class="youtube-buttons"><button id="youtube-show" type="button">Mostrar referencia</button><button id="youtube-clear" type="button">Quitar</button></div>
+            <div id="youtube-player" class="youtube-player"></div>
+          </details>
+
+          <p class="session-summary" id="session-summary">Aún no hay sesiones evaluadas.</p>
+        </aside>
       </section>
     </main>
+    <dialog class="evaluation-dialog" id="evaluation-dialog" aria-labelledby="evaluation-title">
+      <form id="evaluation-form" method="dialog">
+        <span class="panel-eyebrow">SESIÓN FINALIZADA</span><h2 id="evaluation-title">¿Cómo te fue?</h2>
+        <p>La evaluación es opcional y se guarda solo en este dispositivo para comparar modos.</p>
+        <label for="sleep-score">Sueño sentido <output id="sleep-score-value">5</output>/10<input id="sleep-score" name="sleep" type="range" min="1" max="10" value="5" /></label>
+        <label for="focus-score">Concentración <output id="focus-score-value">5</output>/10<input id="focus-score" name="focus" type="range" min="1" max="10" value="5" /></label>
+        <label for="distractions-count">Veces que te distrajiste<input id="distractions-count" name="distractions" type="number" min="0" value="0" inputmode="numeric" /></label>
+        <label for="understanding-score">Comprensión de lo leído <output id="understanding-score-value">5</output>/10<input id="understanding-score" name="understanding" type="range" min="1" max="10" value="5" /></label>
+        <p class="evaluation-mode" id="evaluation-mode"></p>
+        <div class="evaluation-actions"><button type="submit" value="skip">Omitir</button><button class="save-evaluation" type="submit" value="save">Guardar evaluación</button></div>
+      </form>
+    </dialog>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
-    <script type="module" src="./app.js?v=10"></script>
+    <script type="module" src="./app.js?v=11"></script>
   </body>
 </html>
