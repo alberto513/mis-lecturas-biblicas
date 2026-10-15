@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=17" />
+    <link rel="stylesheet" href="./styles.css?v=18" />
     <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
@@ -29,7 +29,22 @@
         </header>
 
         <div class="library-status" id="library-status" aria-live="polite"></div>
-        <div class="reading-grid" id="reading-grid" aria-label="Las catorce lecturas bíblicas"></div>
+        <div class="reading-grid" id="reading-grid" aria-label="Las catorce lecturas bíblicas">
+          <a class="reading-card fallback-reading" href="./content/NT_001_Mateo_1-18.txt"><span class="reading-number">001</span><span><strong class="reading-name">Mateo 1–18</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_002_Mateo_19-28_Marcos_1-5.txt"><span class="reading-number">002</span><span><strong class="reading-name">Mateo 19–28 · Marcos 1–5</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_003_Marcos_6-16_Lucas_1-3.txt"><span class="reading-number">003</span><span><strong class="reading-name">Marcos 6–16 · Lucas 1–3</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_004_Lucas_4-16.txt"><span class="reading-number">004</span><span><strong class="reading-name">Lucas 4–16</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_005_Lucas_17-24_Juan_1-6.txt"><span class="reading-number">005</span><span><strong class="reading-name">Lucas 17–24 · Juan 1–6</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_006_Juan_7-21_Hechos_1.txt"><span class="reading-number">006</span><span><strong class="reading-name">Juan 7–21 · Hechos 1</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_007_Hechos_2-16.txt"><span class="reading-number">007</span><span><strong class="reading-name">Hechos 2–16</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_008_Hechos_17-28_Romanos_1-5.txt"><span class="reading-number">008</span><span><strong class="reading-name">Hechos 17–28 · Romanos 1–5</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_009_Romanos_6-16_1_Corintios_1-11.txt"><span class="reading-number">009</span><span><strong class="reading-name">Romanos 6–16 · 1 Corintios 1–11</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_010_1_Corintios_12-16_2_Corintios_1-13_Gálatas_1-6.txt"><span class="reading-number">010</span><span><strong class="reading-name">1 Corintios 12–16 · Gálatas 1–6</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_011_Efesios_1-6_Filipenses_1-4_Colosenses_1-4_1_Tesalonicenses_1-5_2_Tesalonicenses_1-3_1_Timoteo_1-6.txt"><span class="reading-number">011</span><span><strong class="reading-name">Efesios · Filipenses · Colosenses</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_012_2_Timoteo_1-4_Tito_1-3_Filemón_1_Hebreos_1-13_Santiago_1-5_1_Pedro_1.txt"><span class="reading-number">012</span><span><strong class="reading-name">2 Timoteo · Tito · Hebreos · Santiago</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_013_1_Pedro_2-5_2_Pedro_1-3_1_Juan_1-5_2_Juan_1_3_Juan_1_Judas_1_Apocalipsis_1-14.txt"><span class="reading-number">013</span><span><strong class="reading-name">1 Pedro · 1–3 Juan · Apocalipsis 1–14</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+          <a class="reading-card fallback-reading" href="./content/NT_014_Apocalipsis_15-22.txt"><span class="reading-number">014</span><span><strong class="reading-name">Apocalipsis 15–22</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
+        </div>
       </section>
 
       <section class="reader-view is-hidden" id="reader-view" aria-labelledby="reader-title">
@@ -144,6 +159,7 @@
       </form>
     </dialog>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
-    <script type="module" src="./app.js?v=17"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister()));</script>
+    <script defer src="./app.js?v=18"></script>
   </body>
 </html>
