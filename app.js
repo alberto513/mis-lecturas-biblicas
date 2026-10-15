@@ -90,7 +90,7 @@ const ui = {
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
   play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), fontSize: document.querySelector('#font-size-label'), versionSelect: document.querySelector('#version-select'),
   versionCredit: document.querySelector('#version-credit'),
-  focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'),
+  focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'), audioTest: document.querySelector('#audio-test-button'),
   betaFrequency: document.querySelector('#beta-frequency'), betaFrequencyValue: document.querySelector('#beta-frequency-value'), masterVolume: document.querySelector('#master-volume'), masterVolumeValue: document.querySelector('#master-volume-value'),
   toneVolume: document.querySelector('#tone-volume'), toneVolumeValue: document.querySelector('#tone-volume-value'), musicVolume: document.querySelector('#music-volume'), musicVolumeValue: document.querySelector('#music-volume-value'),
   musicLibrary: document.querySelector('#music-library'), musicFile: document.querySelector('#music-file'), musicFileName: document.querySelector('#music-file-name'), musicEnabled: document.querySelector('#music-enabled'),
@@ -98,7 +98,7 @@ const ui = {
   youtubeUrl: document.querySelector('#youtube-url'), youtubeShow: document.querySelector('#youtube-show'), youtubeClear: document.querySelector('#youtube-clear'), youtubePlayer: document.querySelector('#youtube-player'),
   evaluationDialog: document.querySelector('#evaluation-dialog'), evaluationForm: document.querySelector('#evaluation-form'), evaluationMode: document.querySelector('#evaluation-mode'),
 };
-const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioPlay && ui.musicLibrary && ui.evaluationDialog && ui.evaluationForm);
+const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioTest && ui.audioPlay && ui.musicLibrary && ui.evaluationDialog && ui.evaluationForm);
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
 function rvrTitle(file) {
@@ -269,6 +269,38 @@ function setMusicSource(source, label, objectUrl = null) {
   ui.musicFileName.textContent = label || 'Todavía no elegiste un archivo.';
 }
 
+function ensureMusicSource() {
+  if (focusAudio.musicElement.src) return true;
+  const firstLibraryTrack = Array.from(ui.musicLibrary.options).find((option) => Boolean(option.value));
+  if (!firstLibraryTrack) return false;
+  focusSettings.musicTrack = firstLibraryTrack.value;
+  ui.musicLibrary.value = firstLibraryTrack.value;
+  setMusicSource(firstLibraryTrack.value, firstLibraryTrack.textContent);
+  return true;
+}
+
+async function playSoundTest() {
+  try {
+    const context = ensureAudioGraph();
+    await context.resume();
+    const gain = context.createGain();
+    const oscillator = context.createOscillator();
+    const now = context.currentTime;
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, now);
+    oscillator.frequency.setValueAtTime(660, now + .32);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(.18, now + .03);
+    gain.gain.setValueAtTime(.18, now + .58);
+    gain.gain.linearRampToValueAtTime(0, now + .72);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + .75);
+    oscillator.addEventListener('ended', () => { oscillator.disconnect(); gain.disconnect(); }, { once: true });
+    ui.audioStatus.textContent = 'Prueba enviada: deberías oír dos tonos breves. Si no se oyen, sube el volumen del equipo o revisa la salida de audio.';
+  } catch (error) { ui.audioStatus.textContent = error.message || 'No se pudo ejecutar la prueba de sonido.'; }
+}
+
 function syncMusic() {
   if (!focusAudio.context) return;
   const canPlay = focusAudio.running && focusSettings.musicEnabled && Boolean(focusAudio.musicElement.src);
@@ -297,6 +329,7 @@ function pauseSessionClock() {
 
 async function startFocusAudio() {
   try {
+    if (focusSettings.musicEnabled) ensureMusicSource();
     const context = ensureAudioGraph();
     await context.resume();
     connectMusic();
@@ -500,7 +533,7 @@ document.querySelector('#fullscreen-button').addEventListener('click', async () 
 
 function selectFocusMode(mode) {
   focusSettings.mode = mode;
-  if (mode === 'instrumental') focusSettings.musicEnabled = true;
+  if (mode === 'instrumental') { focusSettings.musicEnabled = true; ensureMusicSource(); }
   if (mode === 'silence') focusSettings.musicEnabled = false;
   saveFocusSettings();
   if (focusAudio.running) { configureTones(); syncMusic(); }
@@ -530,7 +563,7 @@ if (hasFocusPanel) {
     if (focusAudio.running) apply(focusSettings[property]);
     renderFocusPanel();
   }));
-  ui.musicEnabled.addEventListener('change', () => { focusSettings.musicEnabled = ui.musicEnabled.checked; saveFocusSettings(); if (focusAudio.running) syncMusic(); renderFocusPanel(); });
+  ui.musicEnabled.addEventListener('change', () => { focusSettings.musicEnabled = ui.musicEnabled.checked; if (focusSettings.musicEnabled) ensureMusicSource(); saveFocusSettings(); if (focusAudio.running) syncMusic(); renderFocusPanel(); });
   ui.musicLibrary.addEventListener('change', () => {
     const source = ui.musicLibrary.value;
     const label = source ? ui.musicLibrary.selectedOptions[0].textContent : '';
@@ -554,6 +587,7 @@ if (hasFocusPanel) {
     renderFocusPanel();
   });
   ui.audioPlay.addEventListener('click', () => focusAudio.running ? pauseFocusAudio() : startFocusAudio());
+  ui.audioTest.addEventListener('click', playSoundTest);
   ui.youtubeShow.addEventListener('click', showYoutubeReference);
   ui.youtubeClear.addEventListener('click', () => { ui.youtubePlayer.replaceChildren(); ui.youtubeUrl.value = ''; focusSettings.youtubeUrl = ''; saveFocusSettings(); });
   ui.youtubeUrl.addEventListener('change', () => { focusSettings.youtubeUrl = ui.youtubeUrl.value.trim(); saveFocusSettings(); });
@@ -582,4 +616,4 @@ if (hasFocusPanel) {
 }
 window.addEventListener('pagehide', stopFocusAudio);
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=14'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=15'));

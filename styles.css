@@ -91,6 +91,7 @@ h1 em { color: var(--gold-soft); font-weight: 400; }
 .audio-control span { display: flex; justify-content: space-between; gap: 1rem; }.audio-control output { color: var(--gold-soft); font-weight: 700; font-variant-numeric: tabular-nums; }
 .audio-control input { width: 100%; accent-color: var(--gold); }
 .audio-note { margin: .68rem 0 0; color: var(--muted); font-size: .67rem; line-height: 1.45; }
+.audio-test { width: 100%; min-height: 2.55rem; margin-top: .72rem; color: var(--gold-soft); border: 1px solid var(--line); border-radius: .6rem; background: rgba(213, 175, 98, .08); cursor: pointer; font-size: .76rem; font-weight: 750; }.audio-test:hover, .audio-test:focus-visible { border-color: var(--gold); outline: 2px solid rgba(213, 175, 98, .3); outline-offset: 2px; }
 .mixer-section, .session-section { margin-top: 1rem; padding-top: .95rem; border-top: 1px solid var(--line); }
 .music-upload { display: grid; gap: .35rem; margin-top: .9rem; color: var(--muted); font-size: .73rem; }.music-upload input { max-width: 100%; color: var(--text); font-size: .7rem; }.music-upload small { color: var(--gold-soft); overflow-wrap: anywhere; }
 .music-library { display: grid; gap: .35rem; margin-top: .9rem; color: var(--muted); font-size: .73rem; }.music-library select { min-height: 2.55rem; padding: 0 .55rem; color: var(--text); border: 1px solid var(--line); border-radius: .55rem; background: var(--ink); }.music-library small { color: var(--muted); font-size: .66rem; line-height: 1.35; }
