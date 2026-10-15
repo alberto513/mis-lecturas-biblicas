@@ -98,7 +98,7 @@ const ui = {
   youtubeUrl: document.querySelector('#youtube-url'), youtubeShow: document.querySelector('#youtube-show'), youtubeClear: document.querySelector('#youtube-clear'), youtubePlayer: document.querySelector('#youtube-player'),
   evaluationDialog: document.querySelector('#evaluation-dialog'), evaluationForm: document.querySelector('#evaluation-form'), evaluationMode: document.querySelector('#evaluation-mode'),
 };
-const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioPlay && ui.evaluationDialog && ui.evaluationForm);
+const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioPlay && ui.musicLibrary && ui.evaluationDialog && ui.evaluationForm);
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
 function rvrTitle(file) {
@@ -582,4 +582,4 @@ if (hasFocusPanel) {
 }
 window.addEventListener('pagehide', stopFocusAudio);
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=13'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=14'));
