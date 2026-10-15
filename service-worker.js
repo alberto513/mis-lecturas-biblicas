@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lecturas-biblicas-v15';
+const CACHE_NAME = 'lecturas-biblicas-v16';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './content/NT_001_Mateo_1-18.txt', './content/NT_002_Mateo_19-28_Marcos_1-5.txt',

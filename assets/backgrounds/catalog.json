@@ -1,0 +1,10 @@
+{
+  "catalogVersion": 1,
+  "license": "Imágenes originales generadas para Mis Lecturas Bíblicas; no representan reconstrucciones históricas ni escenas bíblicas exactas.",
+  "items": [
+    { "id": "desierto-alba", "title": "Desierto del alba", "file": "desierto-del-alba.png", "category": "paisajes", "tags": ["antiguo", "genesis", "exodo", "salmos", "desierto"], "source": "Creado con IA para este lector", "license": "Original del proyecto", "origin": "assets/backgrounds/desierto-del-alba.png" },
+    { "id": "galilea-azul", "title": "Galilea azul", "file": "galilea-azul.png", "category": "paisajes", "tags": ["nuevo", "mateo", "marcos", "lucas", "juan", "hechos", "galilea"], "source": "Creado con IA para este lector", "license": "Original del proyecto", "origin": "assets/backgrounds/galilea-azul.png" },
+    { "id": "jerusalen-amanecer", "title": "Jerusalén al amanecer", "file": "jerusalen-amanecer.png", "category": "paisajes", "tags": ["antiguo", "nuevo", "salmos", "mateo", "marcos", "lucas", "juan", "hechos", "jerusalen"], "source": "Creado con IA para este lector", "license": "Original del proyecto", "origin": "assets/backgrounds/jerusalen-amanecer.png" },
+    { "id": "vision-celestial", "title": "Visión celestial", "file": "vision-celestial.png", "category": "celestial", "tags": ["celestial", "daniel", "ezequiel", "apocalipsis"], "source": "Creado con IA para este lector", "license": "Original del proyecto", "origin": "assets/backgrounds/vision-celestial.png" }
+  ]
+}

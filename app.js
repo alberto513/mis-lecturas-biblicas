@@ -60,6 +60,13 @@ const SETTINGS_KEY = 'lecturas-biblicas:settings';
 const PROGRESS_PREFIX = 'lecturas-biblicas:progress:';
 const FOCUS_SETTINGS_KEY = 'lecturas-biblicas:focus-settings';
 const FOCUS_RESULTS_KEY = 'lecturas-biblicas:focus-results';
+const ATMOSPHERE_SETTINGS_KEY = 'lecturas-biblicas:atmosphere-settings';
+const ATMOSPHERE_CATALOG = [
+  { id: 'desierto-alba', title: 'Desierto del alba', file: 'desierto-del-alba.png', category: 'paisajes', tags: ['antiguo', 'genesis', 'exodo', 'salmos', 'desierto'], accent: '#d8a454', surface: 'rgba(17, 12, 7, .89)' },
+  { id: 'galilea-azul', title: 'Galilea azul', file: 'galilea-azul.png', category: 'paisajes', tags: ['nuevo', 'mateo', 'marcos', 'lucas', 'juan', 'hechos', 'galilea'], accent: '#78b6d4', surface: 'rgba(5, 13, 22, .89)' },
+  { id: 'jerusalen-amanecer', title: 'Jerusalén al amanecer', file: 'jerusalen-amanecer.png', category: 'paisajes', tags: ['antiguo', 'nuevo', 'salmos', 'mateo', 'marcos', 'lucas', 'juan', 'hechos', 'jerusalen'], accent: '#e5b66b', surface: 'rgba(19, 12, 6, .88)' },
+  { id: 'vision-celestial', title: 'Visión celestial', file: 'vision-celestial.png', category: 'celestial', tags: ['celestial', 'daniel', 'ezequiel', 'apocalipsis'], accent: '#a6b9ef', surface: 'rgba(5, 9, 20, .88)' },
+];
 const clamp = (number, minimum, maximum) => Math.min(maximum, Math.max(minimum, number));
 
 let settings = { speed: 250, fontSize: 10, versionId: 'vbl' };
@@ -76,6 +83,15 @@ focusSettings.toneVolume = clamp(Number(focusSettings.toneVolume), 0, 1);
 focusSettings.musicVolume = clamp(Number(focusSettings.musicVolume), 0, 1);
 focusSettings.sessionMinutes = [30, 45, 60].includes(Number(focusSettings.sessionMinutes)) ? Number(focusSettings.sessionMinutes) : 60;
 
+let atmosphereSettings = { enabled: true, followBook: true, category: 'all', interval: '10', customMinutes: 10, intensity: 'balanced', rotationPaused: false, favorites: [], hidden: [] };
+try { atmosphereSettings = { ...atmosphereSettings, ...JSON.parse(localStorage.getItem(ATMOSPHERE_SETTINGS_KEY) || '{}') }; } catch { /* The visual layer remains optional if storage is blocked. */ }
+atmosphereSettings.category = ['all', 'paisajes', 'antiguo', 'nuevo', 'celestial'].includes(atmosphereSettings.category) ? atmosphereSettings.category : 'all';
+atmosphereSettings.interval = ['fixed', '3', '5', '10', '15', 'custom'].includes(String(atmosphereSettings.interval)) ? String(atmosphereSettings.interval) : '10';
+atmosphereSettings.customMinutes = clamp(Number(atmosphereSettings.customMinutes) || 10, 1, 60);
+atmosphereSettings.intensity = ['soft', 'balanced', 'immersive'].includes(atmosphereSettings.intensity) ? atmosphereSettings.intensity : 'balanced';
+atmosphereSettings.favorites = Array.isArray(atmosphereSettings.favorites) ? atmosphereSettings.favorites : [];
+atmosphereSettings.hidden = Array.isArray(atmosphereSettings.hidden) ? atmosphereSettings.hidden : [];
+
 let activeReading = null;
 let activeVersion = null;
 let words = [];
@@ -83,6 +99,9 @@ let position = 0;
 let isPlaying = false;
 let timer = null;
 let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, oscillators: [], musicElement: new Audio(), musicSource: null, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
+let atmosphereTimer = null;
+let atmosphereCurrentId = null;
+let atmosphereVisibleLayer = 'a';
 
 const ui = {
   library: document.querySelector('#library-view'), reader: document.querySelector('#reader-view'), grid: document.querySelector('#reading-grid'),
@@ -97,8 +116,11 @@ const ui = {
   sessionClock: document.querySelector('#session-clock'), audioPlay: document.querySelector('#audio-play-button'), toneNote: document.querySelector('#tone-note'), sessionSummary: document.querySelector('#session-summary'),
   youtubeUrl: document.querySelector('#youtube-url'), youtubeShow: document.querySelector('#youtube-show'), youtubeClear: document.querySelector('#youtube-clear'), youtubePlayer: document.querySelector('#youtube-player'),
   evaluationDialog: document.querySelector('#evaluation-dialog'), evaluationForm: document.querySelector('#evaluation-form'), evaluationMode: document.querySelector('#evaluation-mode'),
+  atmosphereRoot: document.querySelector('#atmosphere-root'), atmosphereLayerA: document.querySelector('#atmosphere-layer-a'), atmosphereLayerB: document.querySelector('#atmosphere-layer-b'),
+  atmospherePanel: document.querySelector('#atmosphere-panel'), atmosphereToggle: document.querySelector('#atmosphere-panel-button'), atmosphereClose: document.querySelector('#atmosphere-panel-close'), atmosphereStatus: document.querySelector('#atmosphere-status'), atmosphereEnabled: document.querySelector('#atmosphere-enabled'), atmosphereFollowBook: document.querySelector('#atmosphere-follow-book'), atmosphereCategory: document.querySelector('#atmosphere-category'), atmosphereInterval: document.querySelector('#atmosphere-interval'), atmosphereCustomMinutes: document.querySelector('#atmosphere-custom-minutes'), customIntervalField: document.querySelector('#custom-interval-field'), atmospherePause: document.querySelector('#atmosphere-pause'), atmosphereFavorite: document.querySelector('#atmosphere-favorite'), atmosphereHide: document.querySelector('#atmosphere-hide'), atmosphereGallery: document.querySelector('#atmosphere-gallery'), galleryCount: document.querySelector('#gallery-count'), atmosphereCredit: document.querySelector('#atmosphere-credit'),
 };
 const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioTest && ui.audioPlay && ui.musicLibrary && ui.evaluationDialog && ui.evaluationForm);
+const hasAtmospherePanel = Boolean(ui.atmosphereRoot && ui.atmosphereLayerA && ui.atmosphereLayerB && ui.atmospherePanel && ui.atmosphereToggle && ui.atmosphereClose && ui.atmosphereEnabled && ui.atmosphereFollowBook && ui.atmosphereCategory && ui.atmosphereInterval && ui.atmosphereCustomMinutes && ui.atmosphereGallery);
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
 function rvrTitle(file) {
@@ -153,6 +175,121 @@ function formatSessionTime(milliseconds) { const seconds = Math.max(0, Math.ceil
 function currentSessionRemaining() { return focusAudio.running ? Math.max(0, focusAudio.remainingMs - (Date.now() - focusAudio.startedAt)) : focusAudio.remainingMs; }
 function toneMode() { return ['beta', 'gamma'].includes(focusSettings.mode) ? focusSettings.mode : null; }
 function delay(milliseconds) { return new Promise((resolve) => window.setTimeout(resolve, milliseconds)); }
+
+function saveAtmosphereSettings() { try { localStorage.setItem(ATMOSPHERE_SETTINGS_KEY, JSON.stringify(atmosphereSettings)); } catch { /* The visual layer remains usable without persistence. */ } }
+function currentAtmosphere() { return ATMOSPHERE_CATALOG.find((scene) => scene.id === atmosphereCurrentId) || null; }
+function atmosphereTagsForReading() {
+  const title = `${activeReading?.title || ''} ${activeVersion?.id || ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const tags = [];
+  if (/genesis|exodo|levitico|numeros|deuteronomio|josue|jueces|samuel|reyes|cronicas|esdras|nehemias|job|salmos|proverbios|eclesiastes|isaias|jeremias|ezequiel|oseas|joel|amos|abdias|jonas|miqueas|nahum|habacuc|sofonias|hageo|zacarias|malaquias/.test(title)) tags.push('antiguo');
+  if (/mateo|marcos|lucas|juan|hechos|romanos|corintios|galatas|efesios|filipenses|colosenses|tesalonicenses|timoteo|tito|filemon|hebreos|santiago|pedro|judas/.test(title)) tags.push('nuevo');
+  if (/apocalipsis|daniel|ezequiel/.test(title)) tags.push('celestial');
+  ['genesis', 'exodo', 'salmos', 'mateo', 'marcos', 'lucas', 'juan', 'hechos', 'daniel', 'ezequiel', 'apocalipsis'].forEach((book) => { if (title.includes(book)) tags.push(book); });
+  return tags;
+}
+function availableAtmospheres({ contextual = false } = {}) {
+  let scenes = ATMOSPHERE_CATALOG.filter((scene) => !atmosphereSettings.hidden.includes(scene.id));
+  if (atmosphereSettings.category !== 'all') scenes = scenes.filter((scene) => scene.category === atmosphereSettings.category || scene.tags.includes(atmosphereSettings.category));
+  if (!scenes.length) scenes = ATMOSPHERE_CATALOG.filter((scene) => !atmosphereSettings.hidden.includes(scene.id));
+  if (contextual && atmosphereSettings.followBook) {
+    const tags = atmosphereTagsForReading();
+    const matched = scenes.filter((scene) => scene.tags.some((tag) => tags.includes(tag)));
+    if (matched.length) return matched;
+  }
+  return scenes;
+}
+function atmosphereDelay() {
+  if (atmosphereSettings.interval === 'fixed') return 0;
+  const minutes = atmosphereSettings.interval === 'custom' ? atmosphereSettings.customMinutes : Number(atmosphereSettings.interval);
+  return Number.isFinite(minutes) && minutes > 0 ? minutes * 60000 : 0;
+}
+function preloadNextAtmosphere() {
+  const scenes = availableAtmospheres({ contextual: false });
+  const next = scenes.find((scene) => scene.id !== atmosphereCurrentId);
+  if (next) { const image = new Image(); image.src = `./assets/backgrounds/${next.file}`; }
+}
+function applyAtmosphere(scene, { announce = false } = {}) {
+  if (!hasAtmospherePanel || !scene) return;
+  const incoming = atmosphereVisibleLayer === 'a' ? ui.atmosphereLayerB : ui.atmosphereLayerA;
+  const outgoing = atmosphereVisibleLayer === 'a' ? ui.atmosphereLayerA : ui.atmosphereLayerB;
+  incoming.style.backgroundImage = `url("./assets/backgrounds/${scene.file}")`;
+  incoming.classList.add('is-visible');
+  outgoing.classList.remove('is-visible');
+  atmosphereVisibleLayer = atmosphereVisibleLayer === 'a' ? 'b' : 'a';
+  atmosphereCurrentId = scene.id;
+  document.documentElement.style.setProperty('--atmosphere-accent', scene.accent);
+  document.documentElement.style.setProperty('--gold', scene.accent);
+  document.documentElement.style.setProperty('--atmosphere-surface', scene.surface);
+  const intensity = { soft: { opacity: '.54', blur: '13px' }, balanced: { opacity: '.78', blur: '8px' }, immersive: { opacity: '.94', blur: '3px' } }[atmosphereSettings.intensity];
+  ui.atmosphereRoot.style.setProperty('--atmosphere-blur', intensity.blur);
+  ui.atmosphereRoot.style.opacity = atmosphereSettings.enabled ? intensity.opacity : '0';
+  if (announce) ui.atmosphereStatus.textContent = `Escena aplicada: ${scene.title}.`;
+  preloadNextAtmosphere();
+  renderAtmospherePanel();
+}
+function activateAtmosphereForReading() {
+  if (!hasAtmospherePanel) return;
+  const isActive = atmosphereSettings.enabled && Boolean(activeReading);
+  document.documentElement.classList.toggle('atmosphere-active', isActive);
+  ui.atmosphereRoot.classList.toggle('is-active', isActive);
+  if (!isActive) { ui.atmosphereRoot.style.opacity = '0'; clearAtmosphereTimer(); return; }
+  const contextual = availableAtmospheres({ contextual: true });
+  const first = contextual.find((scene) => scene.id !== atmosphereCurrentId) || contextual[0];
+  if (first) applyAtmosphere(first);
+  scheduleAtmosphere();
+}
+function clearAtmosphereTimer() { if (atmosphereTimer) { window.clearTimeout(atmosphereTimer); atmosphereTimer = null; } }
+function scheduleAtmosphere() {
+  clearAtmosphereTimer();
+  const timeout = atmosphereDelay();
+  if (!hasAtmospherePanel || !atmosphereSettings.enabled || atmosphereSettings.rotationPaused || !timeout || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  atmosphereTimer = window.setTimeout(() => { moveAtmosphere(1); scheduleAtmosphere(); }, timeout);
+}
+function moveAtmosphere(direction = 1) {
+  const scenes = availableAtmospheres({ contextual: false });
+  if (!scenes.length) return;
+  const currentIndex = Math.max(0, scenes.findIndex((scene) => scene.id === atmosphereCurrentId));
+  const next = scenes[(currentIndex + direction + scenes.length) % scenes.length];
+  applyAtmosphere(next, { announce: true });
+  scheduleAtmosphere();
+}
+function renderAtmospherePanel() {
+  if (!hasAtmospherePanel) return;
+  const scene = currentAtmosphere();
+  const visibleScenes = availableAtmospheres({ contextual: false });
+  ui.atmosphereEnabled.checked = atmosphereSettings.enabled;
+  ui.atmosphereFollowBook.checked = atmosphereSettings.followBook;
+  ui.atmosphereCategory.value = atmosphereSettings.category;
+  ui.atmosphereInterval.value = atmosphereSettings.interval;
+  ui.atmosphereCustomMinutes.value = String(atmosphereSettings.customMinutes);
+  ui.customIntervalField.classList.toggle('is-hidden', atmosphereSettings.interval !== 'custom');
+  document.querySelectorAll('[data-atmosphere-intensity]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.atmosphereIntensity === atmosphereSettings.intensity)));
+  ui.atmospherePause.textContent = atmosphereSettings.rotationPaused ? 'Reanudar cambios' : 'Pausar cambios';
+  ui.atmospherePause.classList.toggle('is-active', atmosphereSettings.rotationPaused);
+  ui.atmosphereFavorite.textContent = scene && atmosphereSettings.favorites.includes(scene.id) ? 'Quitar favorito' : 'Guardar favorito';
+  ui.atmosphereHide.disabled = !scene || ATMOSPHERE_CATALOG.filter((candidate) => !atmosphereSettings.hidden.includes(candidate.id)).length <= 1;
+  ui.galleryCount.textContent = `${visibleScenes.length} fondo${visibleScenes.length === 1 ? '' : 's'}`;
+  ui.atmosphereStatus.textContent = scene
+    ? `${scene.title} · ${atmosphereSettings.followBook ? 'relación amplia con el libro actual cuando está disponible' : 'selección manual o aleatoria'}.`
+    : 'Selecciona una escena para iniciar el ambiente visual.';
+  ui.atmosphereCredit.textContent = scene ? `${scene.title} · Imagen original generada para este lector. Inspiración artística; no es una reconstrucción histórica.` : '';
+  ui.atmosphereGallery.replaceChildren(...visibleScenes.map((candidate) => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'gallery-card'; button.style.backgroundImage = `url("./assets/backgrounds/${candidate.file}")`;
+    button.setAttribute('aria-pressed', String(candidate.id === atmosphereCurrentId));
+    button.innerHTML = `<span>${candidate.title}${atmosphereSettings.favorites.includes(candidate.id) ? ' ★' : ''}</span>`;
+    button.addEventListener('click', () => { atmosphereSettings.enabled = true; applyAtmosphere(candidate, { announce: true }); saveAtmosphereSettings(); scheduleAtmosphere(); });
+    return button;
+  }));
+}
+function setAtmospherePanel(open) {
+  if (!hasAtmospherePanel) return;
+  ui.atmospherePanel.classList.toggle('is-hidden', !open);
+  ui.atmospherePanel.setAttribute('aria-hidden', String(!open));
+  ui.atmosphereToggle.setAttribute('aria-expanded', String(open));
+  if (open) { if (hasFocusPanel) setFocusPanel(false); renderAtmospherePanel(); ui.atmosphereClose.focus(); }
+  else ui.atmosphereToggle.focus();
+}
 
 function renderFocusPanel() {
   if (!hasFocusPanel) return;
@@ -488,6 +625,7 @@ async function openReader(reading) {
   ui.title.textContent = `${activeVersion.shortName} · ${reading.title}`;
   ui.library.classList.add('is-hidden');
   ui.reader.classList.remove('is-hidden');
+  activateAtmosphereForReading();
   ui.word.textContent = 'Cargando…';
   try {
     const folder = activeVersion.folder ? `${activeVersion.folder}/` : '';
@@ -511,6 +649,8 @@ function showLibrary() {
   pauseFocusAudio();
   ui.reader.classList.add('is-hidden');
   ui.library.classList.remove('is-hidden');
+  activeReading = null;
+  activateAtmosphereForReading();
   renderLibrary();
 }
 
@@ -530,6 +670,23 @@ ui.progress.addEventListener('input', () => { pause(); position = Number(ui.prog
 document.querySelector('#fullscreen-button').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch { /* Some mobile browsers intentionally do not support fullscreen. */ }
 });
+
+if (hasAtmospherePanel) {
+  ui.atmosphereToggle.addEventListener('click', () => setAtmospherePanel(ui.atmospherePanel.classList.contains('is-hidden')));
+  ui.atmosphereClose.addEventListener('click', () => setAtmospherePanel(false));
+  ui.atmosphereEnabled.addEventListener('change', () => { atmosphereSettings.enabled = ui.atmosphereEnabled.checked; saveAtmosphereSettings(); activateAtmosphereForReading(); renderAtmospherePanel(); });
+  ui.atmosphereFollowBook.addEventListener('change', () => { atmosphereSettings.followBook = ui.atmosphereFollowBook.checked; saveAtmosphereSettings(); if (activeReading) activateAtmosphereForReading(); renderAtmospherePanel(); });
+  ui.atmosphereCategory.addEventListener('change', () => { atmosphereSettings.category = ui.atmosphereCategory.value; saveAtmosphereSettings(); const scene = availableAtmospheres({ contextual: false })[0]; if (scene) applyAtmosphere(scene, { announce: true }); scheduleAtmosphere(); });
+  ui.atmosphereInterval.addEventListener('change', () => { atmosphereSettings.interval = ui.atmosphereInterval.value; atmosphereSettings.rotationPaused = false; saveAtmosphereSettings(); scheduleAtmosphere(); renderAtmospherePanel(); });
+  ui.atmosphereCustomMinutes.addEventListener('change', () => { atmosphereSettings.customMinutes = clamp(Number(ui.atmosphereCustomMinutes.value) || 10, 1, 60); ui.atmosphereCustomMinutes.value = String(atmosphereSettings.customMinutes); saveAtmosphereSettings(); scheduleAtmosphere(); });
+  document.querySelectorAll('[data-atmosphere-intensity]').forEach((button) => button.addEventListener('click', () => { atmosphereSettings.intensity = button.dataset.atmosphereIntensity; saveAtmosphereSettings(); const scene = currentAtmosphere(); if (scene) applyAtmosphere(scene); }));
+  document.querySelector('#atmosphere-previous').addEventListener('click', () => moveAtmosphere(-1));
+  document.querySelector('#atmosphere-next').addEventListener('click', () => moveAtmosphere(1));
+  ui.atmospherePause.addEventListener('click', () => { atmosphereSettings.rotationPaused = !atmosphereSettings.rotationPaused; saveAtmosphereSettings(); scheduleAtmosphere(); renderAtmospherePanel(); });
+  ui.atmosphereFavorite.addEventListener('click', () => { const scene = currentAtmosphere(); if (!scene) return; const favorites = new Set(atmosphereSettings.favorites); if (favorites.has(scene.id)) favorites.delete(scene.id); else favorites.add(scene.id); atmosphereSettings.favorites = [...favorites]; saveAtmosphereSettings(); renderAtmospherePanel(); });
+  ui.atmosphereHide.addEventListener('click', () => { const scene = currentAtmosphere(); if (!scene) return; atmosphereSettings.hidden = [...new Set([...atmosphereSettings.hidden, scene.id])]; saveAtmosphereSettings(); const next = availableAtmospheres({ contextual: false })[0]; if (next) applyAtmosphere(next, { announce: true }); scheduleAtmosphere(); });
+  document.querySelector('#atmosphere-classic').addEventListener('click', () => { atmosphereSettings.enabled = false; saveAtmosphereSettings(); activateAtmosphereForReading(); renderAtmospherePanel(); });
+}
 
 function selectFocusMode(mode) {
   focusSettings.mode = mode;
@@ -606,14 +763,14 @@ if (hasFocusPanel) {
     ui.evaluationDialog.close();
     renderFocusPanel();
   });
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && focusAudio.running) pauseFocusAudio(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false); if (event.key === 'Escape' && hasAtmospherePanel && !ui.atmospherePanel.classList.contains('is-hidden')) setAtmospherePanel(false); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && focusAudio.running) pauseFocusAudio(); if (document.hidden) clearAtmosphereTimer(); else scheduleAtmosphere(); });
   const savedTrack = Array.from(ui.musicLibrary.options).find((option) => option.value === focusSettings.musicTrack);
   if (savedTrack) setMusicSource(savedTrack.value, savedTrack.textContent);
   else focusSettings.musicTrack = '';
   focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
   renderFocusPanel();
 }
-window.addEventListener('pagehide', stopFocusAudio);
+window.addEventListener('pagehide', () => { stopFocusAudio(); clearAtmosphereTimer(); });
 renderLibrary();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=15'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=16'));

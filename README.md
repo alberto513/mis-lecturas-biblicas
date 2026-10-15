@@ -2,6 +2,14 @@
 
 Sitio estático para lectura bíblica rápida (RSVP), pensado para abrirse directamente desde un enlace de WhatsApp. No requiere cuentas, descargas ni servidores de pago.
 
+## Atmósfera Bíblica
+
+El lector incluye una capa visual local y opcional. El catálogo inicial está en `assets/backgrounds/`, con metadatos en `assets/backgrounds/catalog.json`: cuatro paisajes originales generados para este proyecto. No se presentan como reconstrucciones históricas o escenas bíblicas exactas.
+
+En el lector, el botón **Atmósfera** permite activar o desactivar los fondos, relacionarlos de forma amplia con el libro actual, elegir intensidad, seleccionar un intervalo de 3/5/10/15 minutos o personalizado, avanzar manualmente, pausar la rotación, guardar favoritos y ocultar fondos. Todo se guarda sólo en el navegador de cada persona.
+
+La integración con servicios externos de generación, Wikimedia o Pexels no está activada: requerirá una futura configuración segura del servidor, claves y revisión individual de licencias.
+
 ## Contenido verificado
 
 Los 14 textos originales están en `content/` y se sirven desde el propio sitio. Se preservaron sin modificaciones: las copias tienen el mismo hash SHA-256 que los archivos fuente.
