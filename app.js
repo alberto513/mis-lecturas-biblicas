@@ -284,13 +284,21 @@ function renderAtmospherePanel() {
     return button;
   }));
 }
-function setAtmospherePanel(open) {
+function updatePanelState() {
+  const focusOpen = hasFocusPanel && !ui.focusPanel.classList.contains('is-hidden');
+  const atmosphereOpen = hasAtmospherePanel && !ui.atmospherePanel.classList.contains('is-hidden');
+  document.body.classList.toggle('panel-open', focusOpen || atmosphereOpen);
+}
+
+function setAtmospherePanel(open, { restoreFocus = true } = {}) {
   if (!hasAtmospherePanel) return;
+  if (open && hasFocusPanel && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false, { restoreFocus: false });
   ui.atmospherePanel.classList.toggle('is-hidden', !open);
   ui.atmospherePanel.setAttribute('aria-hidden', String(!open));
   ui.atmosphereToggle.setAttribute('aria-expanded', String(open));
-  if (open) { if (hasFocusPanel) setFocusPanel(false); renderAtmospherePanel(); ui.atmosphereClose.focus(); }
-  else ui.atmosphereToggle.focus();
+  if (open) { renderAtmospherePanel(); ui.atmosphereClose.focus(); }
+  else if (restoreFocus) ui.atmosphereToggle.focus();
+  updatePanelState();
 }
 
 function renderFocusPanel() {
@@ -318,13 +326,15 @@ function renderFocusPanel() {
   renderSessionSummary();
 }
 
-function setFocusPanel(open) {
+function setFocusPanel(open, { restoreFocus = true } = {}) {
   if (!hasFocusPanel) return;
+  if (open && hasAtmospherePanel && !ui.atmospherePanel.classList.contains('is-hidden')) setAtmospherePanel(false, { restoreFocus: false });
   ui.focusPanel.classList.toggle('is-hidden', !open);
   ui.focusPanel.setAttribute('aria-hidden', String(!open));
   ui.focusToggle.setAttribute('aria-expanded', String(open));
   if (open) { renderFocusPanel(); ui.focusClose.focus(); }
-  else ui.focusToggle.focus();
+  else if (restoreFocus) ui.focusToggle.focus();
+  updatePanelState();
 }
 
 function ensureAudioGraph() {
@@ -649,6 +659,8 @@ async function openReader(reading) {
 function showLibrary() {
   pause();
   pauseFocusAudio();
+  if (hasFocusPanel) setFocusPanel(false, { restoreFocus: false });
+  if (hasAtmospherePanel) setAtmospherePanel(false, { restoreFocus: false });
   ui.reader.classList.add('is-hidden');
   ui.library.classList.remove('is-hidden');
   activeReading = null;
