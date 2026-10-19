@@ -20,6 +20,9 @@ const RVR1960_FILES = [
   'NT_013_Judas_a_Apocalipsis.txt',
 ];
 
+const THEME_READINGS = [
+  { id: 'PROMESAS', file: 'Promesas_de_Dios_en_Cristo.txt', title: 'Promesas de Dios en Cristo', folder: 'promesas', isThematic: true },
+];
 const VERSIONS = {
   vbl: {
     id: 'vbl', shortName: 'VBL', label: 'Versión Biblia Libre · VBL', folder: '', credit: '',
@@ -111,6 +114,7 @@ const ui = {
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
   play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), fontSize: document.querySelector('#font-size-label'), versionSelect: document.querySelector('#version-select'),
   versionCredit: document.querySelector('#version-credit'),
+  personalOptimization: document.querySelector('#personal-optimization-view'), personalOptimizationOpen: document.querySelector('#personal-optimization-open'), personalOptimizationBack: document.querySelector('#personal-optimization-back'), additionalContent: document.querySelector('#additional-content'), promisesOpen: document.querySelector('#promises-open'),
   focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'), audioTest: document.querySelector('#audio-test-button'),
   betaFrequency: document.querySelector('#beta-frequency'), betaFrequencyValue: document.querySelector('#beta-frequency-value'), masterVolume: document.querySelector('#master-volume'), masterVolumeValue: document.querySelector('#master-volume-value'),
   toneVolume: document.querySelector('#tone-volume'), toneVolumeValue: document.querySelector('#tone-volume-value'), musicVolume: document.querySelector('#music-volume'), musicVolumeValue: document.querySelector('#music-volume-value'),
@@ -123,6 +127,7 @@ const ui = {
 };
 const hasFocusPanel = Boolean(ui.focusPanel && ui.focusToggle && ui.focusClose && ui.audioStatus && ui.audioTest && ui.audioPlay && ui.musicLibrary && ui.evaluationDialog && ui.evaluationForm);
 const hasAtmospherePanel = Boolean(ui.atmosphereRoot && ui.atmosphereLayerA && ui.atmosphereLayerB && ui.atmospherePanel && ui.atmosphereToggle && ui.atmosphereClose && ui.atmosphereEnabled && ui.atmosphereFollowBook && ui.atmosphereCategory && ui.atmosphereInterval && ui.atmosphereCustomMinutes && ui.atmosphereGallery);
+const hasPersonalOptimization = Boolean(ui.personalOptimization && ui.personalOptimizationOpen && ui.personalOptimizationBack);
 
 function selectedVersion() { return VERSIONS[settings.versionId]; }
 function rvrTitle(file) {
@@ -136,11 +141,12 @@ function rvrTitle(file) {
 }
 
 function readingsFor(version = selectedVersion()) {
-  return version.readings.map((entry, index) => {
+  const bibleReadings = version.readings.map((entry, index) => {
     const [file, title] = Array.isArray(entry) ? entry : [entry, rvrTitle(entry)];
     const id = version.id === 'rvr1960' ? file.slice(0, 6).replace('_', ' ') : String(index + 1).padStart(3, '0');
     return { id, file, title };
   });
+  return bibleReadings;
 }
 function progressKey(reading, version = selectedVersion()) { return `${PROGRESS_PREFIX}${version.id}:${reading.id}`; }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* Local storage may be unavailable. */ } }
@@ -555,7 +561,7 @@ function renderLibrary() {
     const button = document.createElement('button');
     button.className = 'reading-card';
     button.type = 'button';
-    const numberClass = reading.id.includes(' ') ? 'reading-number reading-number-testament' : 'reading-number';
+    const numberClass = /^\d+$/.test(reading.id) ? 'reading-number' : 'reading-number reading-number-testament';
     button.innerHTML = `<span class="${numberClass}">${reading.id}</span><span><strong class="reading-name">${reading.title}</strong><small class="reading-progress">${saved ? formatProgress(percentage) : 'Comenzar lectura'}</small></span><span class="card-arrow" aria-hidden="true">›</span>`;
     button.addEventListener('click', () => openReader(reading));
     return button;
@@ -634,13 +640,16 @@ async function openReader(reading) {
   activeVersion = selectedVersion();
   activeReading = reading;
   ui.status.textContent = '';
-  ui.title.textContent = `${activeVersion.shortName} · ${reading.title}`;
+  ui.title.textContent = reading.isThematic ? `Lectura temática · ${reading.title}` : `${activeVersion.shortName} · ${reading.title}`;
   ui.library.classList.add('is-hidden');
+  if (ui.additionalContent) ui.additionalContent.open = false;
+  if (hasPersonalOptimization) ui.personalOptimization.classList.add('is-hidden');
   ui.reader.classList.remove('is-hidden');
   activateAtmosphereForReading();
   ui.word.textContent = 'Cargando…';
   try {
-    const folder = activeVersion.folder ? `${activeVersion.folder}/` : '';
+    const readingFolder = reading.folder ?? activeVersion.folder;
+    const folder = readingFolder ? `${readingFolder}/` : '';
     const response = await fetch(`./content/${folder}${encodeURIComponent(reading.file)}`);
     if (!response.ok) throw new Error(`No se pudo abrir la lectura (${response.status}).`);
     const text = await response.text();
@@ -656,19 +665,45 @@ async function openReader(reading) {
   }
 }
 
-function showLibrary() {
+function showLibrary({ restoreFocus = false } = {}) {
   pause();
   pauseFocusAudio();
   if (hasFocusPanel) setFocusPanel(false, { restoreFocus: false });
   if (hasAtmospherePanel) setAtmospherePanel(false, { restoreFocus: false });
   ui.reader.classList.add('is-hidden');
+  if (hasPersonalOptimization) ui.personalOptimization.classList.add('is-hidden');
   ui.library.classList.remove('is-hidden');
   activeReading = null;
   activateAtmosphereForReading();
   renderLibrary();
+  if (restoreFocus && hasPersonalOptimization) {
+    window.scrollTo(0, 0);
+    ui.personalOptimizationOpen.focus();
+  }
 }
 
-document.querySelector('#back-button').addEventListener('click', showLibrary);
+function showPersonalOptimization() {
+  if (!hasPersonalOptimization) return;
+  pause();
+  pauseFocusAudio();
+  if (hasFocusPanel) setFocusPanel(false, { restoreFocus: false });
+  if (hasAtmospherePanel) setAtmospherePanel(false, { restoreFocus: false });
+  ui.reader.classList.add('is-hidden');
+  ui.library.classList.add('is-hidden');
+  if (ui.additionalContent) ui.additionalContent.open = false;
+  ui.personalOptimization.classList.remove('is-hidden');
+  activeReading = null;
+  activateAtmosphereForReading();
+  window.scrollTo(0, 0);
+  ui.personalOptimizationBack.focus();
+}
+
+document.querySelector('#back-button').addEventListener('click', () => showLibrary());
+if (hasPersonalOptimization) {
+  ui.personalOptimizationOpen.addEventListener('click', showPersonalOptimization);
+  ui.personalOptimizationBack.addEventListener('click', () => showLibrary({ restoreFocus: true }));
+}
+if (ui.promisesOpen) ui.promisesOpen.addEventListener('click', () => openReader(THEME_READINGS[0]));
 ui.versionSelect.addEventListener('change', () => {
   settings.versionId = ui.versionSelect.value;
   saveSettings();

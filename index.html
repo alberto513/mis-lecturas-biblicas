@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090806" />
     <meta name="description" content="Lecturas bíblicas en lector rápido." />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=19" />
+    <link rel="stylesheet" href="./styles.css?v=21" />
     <title>Mis Lecturas Bíblicas</title>
   </head>
   <body>
@@ -26,6 +26,21 @@
             </select>
           </label>
           <p class="version-credit" id="version-credit"></p>
+          <details class="additional-content" id="additional-content">
+            <summary>Más opciones <small>Promesas y optimización personal</small></summary>
+            <div class="additional-content-actions">
+              <button class="additional-content-action" id="personal-optimization-open" type="button" aria-describedby="personal-optimization-entry-description">
+                <span class="personal-optimization-entry-eyebrow">PAUSA CON INTENCIÓN</span>
+                <strong>Optimización personal</strong>
+                <small id="personal-optimization-entry-description">Frases realistas para pausar, leer, regular impulsos y sostener hábitos.</small>
+              </button>
+              <button class="additional-content-action" id="promises-open" type="button" aria-describedby="promises-entry-description">
+                <span class="personal-optimization-entry-eyebrow">LECTURA TEMÁTICA</span>
+                <strong>Promesas de Dios en Cristo</strong>
+                <small id="promises-entry-description">Una lectura larga de promesas bíblicas para el lector rápido.</small>
+              </button>
+            </div>
+          </details>
         </header>
 
         <div class="library-status" id="library-status" aria-live="polite"></div>
@@ -45,6 +60,261 @@
           <a class="reading-card fallback-reading" href="./content/NT_013_1_Pedro_2-5_2_Pedro_1-3_1_Juan_1-5_2_Juan_1_3_Juan_1_Judas_1_Apocalipsis_1-14.txt"><span class="reading-number">013</span><span><strong class="reading-name">1 Pedro · 1–3 Juan · Apocalipsis 1–14</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
           <a class="reading-card fallback-reading" href="./content/NT_014_Apocalipsis_15-22.txt"><span class="reading-number">014</span><span><strong class="reading-name">Apocalipsis 15–22</strong><small class="reading-progress">Abrir lectura</small></span><span class="card-arrow" aria-hidden="true">›</span></a>
         </div>
+      </section>
+
+      <section class="personal-optimization-view is-hidden" id="personal-optimization-view" aria-labelledby="personal-optimization-title">
+        <header class="personal-optimization-header">
+          <button class="text-button" id="personal-optimization-back" type="button" aria-label="Volver a las lecturas">← Lecturas</button>
+          <span class="eyebrow">PAUSA CON INTENCIÓN</span>
+        </header>
+
+        <article class="personal-optimization-content">
+          <div class="personal-optimization-hero">
+            <p class="personal-optimization-kicker">HERRAMIENTAS DE AUTOCUIDADO</p>
+            <h2 id="personal-optimization-title">Optimización<br /><em>personal</em></h2>
+            <p class="personal-optimization-lead">Una biblioteca de frases breves para volver a los hechos, bajar un impulso y elegir el próximo paso con más claridad. No es una evaluación psicológica, terapia, tratamiento ni una señal para operar.</p>
+            <p class="optimization-coverage">Más de 2.700 palabras originales · Más de 100 frases · Leé a tu ritmo</p>
+          </div>
+
+          <aside class="optimization-notice" aria-labelledby="optimization-notice-title">
+            <h3 id="optimization-notice-title">Límite honesto</h3>
+            <p>Las frases no limpian la mente, no reprograman el cerebro y no garantizan comprensión, calma ni ganancias. El autodiálogo puede ser útil cuando es concreto y creíble; si una frase te suena falsa, cambiala por una observación más simple. Los sonidos de esta página son un ambiente opcional, no una intervención médica ni una frecuencia terapéutica.</p>
+          </aside>
+
+          <section class="optimization-quick-start" aria-labelledby="optimization-quick-start-title">
+            <h3 id="optimization-quick-start-title">Cómo usar esta guía en un minuto</h3>
+            <ol>
+              <li><strong>Detené la acción.</strong> Alejá el dedo de comprar, vender, responder o acelerar la lectura.</li>
+              <li><strong>Nombrá el estado.</strong> Por ejemplo: “Hay ansiedad”, “Hay sueño”, “Hay rabia” o “Hay urgencia”. Nombrar no es resolver; es dejar de confundir una emoción con una orden.</li>
+              <li><strong>Elegí una frase plausible.</strong> Leela despacio una o dos veces. No uses el lector rápido para esta parte: comprender vale más que correr.</li>
+              <li><strong>Hacé una acción pequeña.</strong> Tomá agua, apoyá ambos pies, revisá tu checklist, anotá un hecho o salí cinco minutos de la pantalla.</li>
+              <li><strong>Revisá el resultado.</strong> Si la activación no baja o aumenta, no fuerces la práctica: pausá y buscá apoyo apropiado.</li>
+            </ol>
+          </section>
+
+          <details class="optimization-section" open>
+            <summary><span>01</span> Empezar sin mentirte <small>Frases de reencuadre realista</small></summary>
+            <div class="optimization-section-body">
+              <h3>Empezar sin mentirte</h3>
+              <p>Una frase útil no intenta borrar lo que sentís. Hace espacio entre lo que sentís y lo que hacés. En vez de “todo va a salir perfecto”, probá una frase que describa el presente y te devuelva una decisión posible. Este estilo se parece más a un recordatorio práctico que a una afirmación grandiosa: reconoce el problema, evita el insulto propio y termina en una conducta verificable.</p>
+              <ul class="phrase-list">
+                <li>Estoy teniendo un pensamiento difícil; no tengo que obedecerlo.</li>
+                <li>Puedo reconocer la emoción sin convertirla en mi identidad.</li>
+                <li>No necesito convencerme de que todo está bien para hacer una cosa útil ahora.</li>
+                <li>Mi tarea es mirar los hechos antes de contar una historia sobre ellos.</li>
+                <li>Un momento incómodo no define todo mi día.</li>
+                <li>Puedo pasar de “¿por qué me pasa esto?” a “¿qué necesito hacer en los próximos diez minutos?”.</li>
+                <li>La claridad puede llegar después de una pausa; no tengo que fabricarla con urgencia.</li>
+                <li>Estoy aprendiendo a responder con menos castigo y más precisión.</li>
+                <li>La autocrítica ruidosa no es una prueba de que tenga razón.</li>
+                <li>Puedo ser responsable sin tratarme como enemigo.</li>
+                <li>Si no sé qué pensar, puedo volver a respirar y mirar un solo hecho comprobable.</li>
+                <li>No necesito ganar esta discusión dentro de mi cabeza.</li>
+              </ul>
+              <p class="optimization-action"><strong>Acción de apoyo:</strong> escribí una oración con tres partes: “Siento ___; el hecho es ___; el próximo paso pequeño es ___”. Si no encontrás un hecho, todavía no tomes una decisión importante.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>02</span> Presencia para leer y estudiar <small>Atención antes que velocidad</small></summary>
+            <div class="optimization-section-body">
+              <h3>Presencia para leer y estudiar</h3>
+              <p>La lectura rápida puede servir para recorrer material, pero no es una terapia ni asegura comprensión profunda. Cuando el objetivo es entender, recordar o dejar que un texto te hable, bajá el ritmo. Elegí un tramo corto, una pregunta y una pausa. Si aparece sueño, no lo conviertas en una lucha moral: cambiá de postura, prendé una luz, tomá agua o dividí la sesión.</p>
+              <ul class="phrase-list">
+                <li>Ahora no tengo que terminar todo; tengo que estar presente en este párrafo.</li>
+                <li>Mi atención puede volver sin que yo me rete.</li>
+                <li>Si me distraigo, noto la distracción y regreso a la próxima palabra.</li>
+                <li>Leer lento por un minuto puede enseñarme más que correr sin entender.</li>
+                <li>Una idea comprendida vale más que diez páginas atravesadas con niebla.</li>
+                <li>Puedo hacer una pausa antes de que el cansancio se vuelva abandono.</li>
+                <li>No necesito sentir inspiración para empezar con una frase.</li>
+                <li>Mi cuerpo también participa: espalda apoyada, mandíbula suelta, respiración normal.</li>
+                <li>Si el sonido distrae, el silencio es una opción válida.</li>
+                <li>El ambiente puede acompañar; la comprensión la construyo con atención y descanso.</li>
+                <li>Puedo releer sin vergüenza; volver atrás también es avanzar.</li>
+                <li>Al terminar este tramo, voy a decir con mis palabras qué entendí.</li>
+              </ul>
+              <p class="optimization-action"><strong>Micropráctica:</strong> leé un párrafo sin música, resumilo en una oración y recién después elegí si querés continuar con el lector. Si no podés resumirlo, bajá la velocidad o descansá.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>03</span> Ansiedad, inquietud y cansancio <small>Nombrar, no pelear</small></summary>
+            <div class="optimization-section-body">
+              <h3>Ansiedad, inquietud y cansancio</h3>
+              <p>La ansiedad suele pedir certeza inmediata. La práctica aquí no busca eliminarla a la fuerza: busca evitar que la ansiedad maneje el volante. Elegí una frase que no prometa control total. Después hacé algo que puedas comprobar: desacelerar, cambiar de ambiente, hablar con alguien, dormir, comer o aplazar una decisión. Si una práctica de respiración, meditación o sonido te aumenta el malestar, detenela; no tenés que “aguantar” para que funcione.</p>
+              <ul class="phrase-list">
+                <li>Hay ansiedad en mí; no significa que exista una emergencia ahora.</li>
+                <li>Mi cuerpo está activado y puedo darle unos minutos antes de decidir.</li>
+                <li>No necesito resolver toda mi vida desde esta sensación.</li>
+                <li>Una preocupación es una hipótesis, no un pronóstico.</li>
+                <li>Puedo anotar la preocupación y volver a ella en un horario más tranquilo.</li>
+                <li>Mi respiración no tiene que ser perfecta; solo puedo dejar de pelear con ella.</li>
+                <li>Si mi mente corre, puedo mirar cinco cosas que veo y volver al lugar donde estoy.</li>
+                <li>Puedo pedir compañía sin tener que explicar todo de manera perfecta.</li>
+                <li>El descanso no es una recompensa que tengo que merecer.</li>
+                <li>Hoy puedo bajar una exigencia en vez de aumentar una culpa.</li>
+                <li>No voy a usar una decisión grande para anestesiar un momento incómodo.</li>
+                <li>La urgencia puede esperar noventa segundos mientras reviso mi cuerpo.</li>
+                <li>Si estoy muy cansado, mi interpretación puede ser más oscura de lo que los hechos muestran.</li>
+                <li>Necesito información y cuidado, no castigo.</li>
+                <li>Puedo elegir una pausa aunque todavía no me sienta listo para ella.</li>
+                <li>Mi próxima acción puede ser pequeña: agua, luz, movimiento o mensaje a alguien de confianza.</li>
+              </ul>
+              <p class="optimization-action"><strong>Plan si-entonces:</strong> si noto pecho apretado, urgencia o pensamiento repetitivo, entonces me levanto de la silla, miro un punto lejano, tomo agua y dejo toda decisión financiera para después de diez minutos.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>04</span> Rabia, frustración e impulso <small>Sentir no obliga a actuar</small></summary>
+            <div class="optimization-section-body">
+              <h3>Rabia, frustración e impulso</h3>
+              <p>La rabia puede señalar que algo importa o que un límite fue cruzado; no es una licencia para herirte, herir a alguien o actuar de inmediato. La meta no es reprimirla ni convertirla en vergüenza. Es ganar tiempo, bajar el volumen y elegir una respuesta que no empeore la situación. Una frase de pausa es más útil si va acompañada de distancia física de la pantalla, del chat o de la persona con quien estás discutiendo.</p>
+              <ul class="phrase-list">
+                <li>Siento rabia; mi siguiente acción sigue siendo una elección.</li>
+                <li>No voy a usar diez segundos de impulso para crear diez días de consecuencias.</li>
+                <li>Puedo alejarme sin perder mi dignidad.</li>
+                <li>Mi enojo merece ser escuchado, pero no tiene que gritar para existir.</li>
+                <li>Antes de responder, voy a nombrar el hecho concreto que me molestó.</li>
+                <li>No necesito ganar una discusión mientras mi cuerpo está en alerta.</li>
+                <li>Puedo decir “necesito una pausa” antes de decir algo que no quiero sostener.</li>
+                <li>La frustración no prueba que soy incapaz; prueba que esto cuesta.</li>
+                <li>Un límite claro es mejor que una explosión tardía.</li>
+                <li>No voy a castigarme, gastar de más ni operar para descargar esta emoción.</li>
+                <li>Puedo mover el cuerpo, lavarme la cara o caminar antes de volver a escribir.</li>
+                <li>Mi versión más firme no necesita ser cruel.</li>
+                <li>Si siento que voy a perder el control, la prioridad es poner distancia y pedir apoyo.</li>
+                <li>Puedo volver a conversar cuando baje la activación, no cuando encuentre la frase más hiriente.</li>
+              </ul>
+              <p class="optimization-action"><strong>Regla de protección:</strong> no mandes mensajes importantes, no cambies reglas y no abras una operación mientras estés insultando, temblando, llorando sin poder parar o con deseo de “demostrar algo”.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>05</span> Hábitos, disciplina y autoestima <small>Pequeño, repetible, medible</small></summary>
+            <div class="optimization-section-body">
+              <h3>Hábitos, disciplina y autoestima</h3>
+              <p>La disciplina no es castigarte hasta obedecer. Es preparar un entorno en el que la siguiente acción razonable sea más fácil. Las frases funcionan mejor cuando apuntan a un comportamiento pequeño y repetible: abrir el libro, preparar el agua, fijar una hora de salida, apagar una pestaña, revisar un registro. La autoestima más resistente nace de ver que podés cumplir acuerdos modestos contigo, no de repetir que sos perfecto.</p>
+              <ul class="phrase-list">
+                <li>No necesito una transformación total para cumplir la siguiente promesa pequeña.</li>
+                <li>Mi sistema importa más que mi ánimo de este minuto.</li>
+                <li>Puedo preparar el entorno antes de exigir fuerza de voluntad.</li>
+                <li>Hacer poco de forma honesta sigue contando.</li>
+                <li>Si fallé hoy, puedo revisar el sistema sin inventar que soy un fracaso.</li>
+                <li>La constancia no es no caer; es volver sin dramatizar.</li>
+                <li>Un calendario no es un juez: es información para ajustar.</li>
+                <li>Mi valor no sube ni baja con una racha.</li>
+                <li>Puedo medir la conducta sin insultar a la persona.</li>
+                <li>Hoy elijo preparar la mañana de mañana con una acción concreta.</li>
+                <li>Cuando algo me cuesta, voy a hacerlo más pequeño antes de abandonarlo.</li>
+                <li>La comparación puede enseñarme algo, pero no va a dirigir mi día.</li>
+                <li>El progreso silencioso sigue siendo progreso.</li>
+                <li>Puedo pedir estructura, descanso o ayuda; no todo tiene que salir de voluntad pura.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>06</span> Trading: antes de abrir una operación <small>Disciplina, no optimismo ciego</small></summary>
+            <div class="optimization-section-body">
+              <h3>Trading: antes de abrir una operación</h3>
+              <p>Este apartado no da asesoramiento financiero ni señales de entrada. Su función es proteger tu proceso de decisiones: una emoción intensa, una necesidad de recuperar o una noche mal dormida no mejoran una operación. Usá estas frases únicamente junto con tus reglas, límites de riesgo y el criterio que ya definiste fuera del momento de presión. La mejor frase de trading puede ser “hoy no opero”.</p>
+              <ul class="phrase-list">
+                <li>Mi trabajo es ejecutar un plan, no adivinar el mercado.</li>
+                <li>Un pensamiento optimista no convierte una entrada débil en una entrada válida.</li>
+                <li>No necesito recuperar nada hoy.</li>
+                <li>Si no puedo explicar la operación en una oración, no la abro.</li>
+                <li>Riesgo definido antes de entrar; emoción revisada antes de clicar.</li>
+                <li>Una operación no tomada también puede ser una decisión correcta.</li>
+                <li>No voy a aumentar tamaño para cambiar cómo me siento.</li>
+                <li>Mi regla existe especialmente cuando quiero ignorarla.</li>
+                <li>La urgencia por entrar no es una señal de calidad.</li>
+                <li>Si el resultado de esta operación define mi humor, el tamaño es demasiado importante para mi estado actual.</li>
+                <li>Puedo esperar confirmación o dejar pasar la oportunidad; el mercado no me debe una revancha.</li>
+                <li>Mi checklist es más confiable que mi euforia o mi miedo del momento.</li>
+                <li>Si estoy distraído, con sueño, rabioso o desesperado, mi tarea es proteger capital y pausar.</li>
+                <li>No necesito demostrar inteligencia con una operación.</li>
+                <li>La disciplina incluye respetar el límite diario aunque todavía crea que “puedo recuperarlo”.</li>
+                <li>El objetivo de hoy es una buena decisión, no una historia heroica.</li>
+              </ul>
+              <p class="optimization-action"><strong>Checklist de 30 segundos:</strong> ¿dormí y comí razonablemente?, ¿entiendo el riesgo?, ¿la entrada coincide con mi plan escrito?, ¿aceptaría perder ese monto sin romper otra regla?, ¿puedo describir qué me haría cancelar? Si una respuesta es “no”, esperá o no operes.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>07</span> Trading: después de perder o ganar <small>Evitar revancha y euforia</small></summary>
+            <div class="optimization-section-body">
+              <h3>Trading: después de perder o ganar</h3>
+              <p>Una pérdida planificada no es una identidad, y una ganancia no prueba que todo método sea bueno. La mente puede usar ambos resultados para justificar la próxima impulsividad: después de perder quiere revancha; después de ganar se siente invencible. El antídoto no es repetir “soy ganador”, sino volver al registro, al riesgo y a la regla de parada que decidiste con la cabeza fría.</p>
+              <ul class="phrase-list">
+                <li>Una pérdida prevista es información, no un veredicto sobre mí.</li>
+                <li>No voy a transformar una pérdida en una persecución.</li>
+                <li>Puedo sentir decepción sin pedirle al mercado que me la quite.</li>
+                <li>Antes de otra entrada, reviso si cambió el plan o solo cambió mi emoción.</li>
+                <li>Mi próxima operación no está obligada a compensar la anterior.</li>
+                <li>La ganancia tampoco me autoriza a romper el tamaño ni el horario.</li>
+                <li>Si quiero ocultar una operación en mi registro, no estoy listo para abrirla.</li>
+                <li>Un día rojo no me da permiso para usar dinero o riesgo que no había aprobado.</li>
+                <li>Un día verde no prueba que puedo ignorar mis límites.</li>
+                <li>Mi registro busca patrones, no excusas.</li>
+                <li>Puedo cerrar la plataforma para proteger una buena decisión.</li>
+                <li>La pausa es parte del sistema, no una derrota frente al miedo.</li>
+                <li>Voy a evaluar proceso, contexto y riesgo antes de evaluar mi valor personal.</li>
+                <li>No necesito contar una historia grandiosa sobre una sola jornada.</li>
+                <li>Si siento vergüenza intensa o deseo de ocultar pérdidas, hablo con una persona de confianza antes de volver a operar.</li>
+                <li>Mi capital y mi paz valen más que una revancha rápida.</li>
+              </ul>
+              <p class="optimization-action"><strong>Regla si-entonces:</strong> si encadeno pérdidas, rompo una regla o noto ganas de “doblar”, entonces cierro la plataforma, anoto el hecho sin insultos y no vuelvo a decidir hasta la próxima ventana definida por mi plan.</p>
+            </div>
+          </details>
+
+          <details class="optimization-section">
+            <summary><span>08</span> Fe, relaciones y conversación interior <small>Humildad y apoyo real</small></summary>
+            <div class="optimization-section-body">
+              <h3>Fe, relaciones y conversación interior</h3>
+              <p>La lectura bíblica puede ser un espacio de presencia, esperanza y examen personal. No tiene que convertirse en otra vara para golpearte. Estas frases no sustituyen una comunidad, un líder de confianza, una amistad madura ni atención profesional cuando hace falta. Sirven para llegar a esa conversación con un poco más de verdad y menos actuación.</p>
+              <ul class="phrase-list">
+                <li>Puedo leer para encontrar dirección, no para castigarme por no sentir algo perfecto.</li>
+                <li>La humildad incluye admitir cuando necesito ayuda.</li>
+                <li>Mi valor no depende de aparentar calma delante de todos.</li>
+                <li>Puedo pedir perdón sin justificar todo lo que hice.</li>
+                <li>Puedo poner un límite sin dejar de tratar a la otra persona con dignidad.</li>
+                <li>No sé toda la historia de quien tengo delante.</li>
+                <li>Escuchar no me obliga a estar de acuerdo, y hablar claro no me obliga a herir.</li>
+                <li>Puedo elegir una palabra honesta en lugar de una reacción elegante pero falsa.</li>
+                <li>La esperanza no exige negar el dolor; me permite buscar el próximo bien posible.</li>
+                <li>Mi práctica espiritual puede incluir descanso, apoyo y tratamiento cuando lo necesito.</li>
+                <li>Hoy puedo agradecer una cosa concreta sin fingir que no hay dificultades.</li>
+                <li>Una conversación difícil merece tiempo, tono y un momento más seguro.</li>
+                <li>No tengo que cargar todo solo para ser fuerte.</li>
+                <li>La compasión hacia mí no reduce mi responsabilidad; me ayuda a sostenerla.</li>
+              </ul>
+            </div>
+          </details>
+
+          <section class="optimization-safety" aria-labelledby="optimization-safety-title">
+            <h3 id="optimization-safety-title">Cuándo dejar esta guía y buscar apoyo</h3>
+            <p>Detené sonidos, lectura rápida y ejercicios de atención si te producen más agitación, mareo, recuerdos intrusivos, desconexión, pánico o más rabia. Si la ansiedad, el enojo, el sueño o la tristeza te impiden funcionar, hablá con un profesional de salud mental o con un servicio de salud local. Si sentís que podés hacerte daño, dañar a alguien o perder el control, buscá ayuda urgente local y contactá a una persona de confianza ahora. Esta página puede acompañar una pausa; no debe ser la única ayuda en una crisis.</p>
+          </section>
+
+          <details class="optimization-section optimization-sources">
+            <summary><span>09</span> Qué se investigó y qué no se promete <small>Fuentes, comunidades y diseño abierto</small></summary>
+            <div class="optimization-section-body">
+              <h3>Qué se investigó y qué no se promete</h3>
+              <p>La selección usa un principio sencillo: frases específicas, observables y ligadas a una acción. La terapia cognitivo-conductual trabaja con la identificación y revisión de pensamientos poco útiles; no exige reemplazar todo pensamiento difícil por optimismo. La evidencia sobre autodiálogo muestra resultados prometedores en algunos contextos de rendimiento, pero no demuestra una ventaja para trading ni reemplaza un plan de riesgo. La atención plena y la música pueden ayudar a algunas personas con estrés, aunque los resultados son variables y también pueden aparecer experiencias adversas.</p>
+              <p>Por eso esta pantalla no promete “frecuencias que curan”, limpieza mental, memoria garantizada, mensajes subliminales, comprensión automática ni mejores resultados financieros. La literatura sobre lectura ultrarrápida advierte intercambios entre velocidad, comprensión y fatiga; por eso la guía te pide bajar el ritmo cuando el objetivo es entender. Los foros se incluyen como posibles espacios de apoyo entre pares, no como evidencia clínica. Los proyectos abiertos se consultaron solo como inspiración técnica de interfaces respetuosas con privacidad y advertencias; no se copió contenido clínico ni código.</p>
+              <ul class="source-list">
+                <li><a href="https://www.nimh.nih.gov/health/topics/psychotherapies" target="_blank" rel="noreferrer">NIMH: psicoterapias</a> y <a href="https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/thought-record/" target="_blank" rel="noreferrer">NHS: registro de pensamientos</a>, para reencuadre realista.</li>
+                <li><a href="https://www.nccih.nih.gov/health/meditation-and-mindfulness-effectiveness-and-safety" target="_blank" rel="noreferrer">NCCIH: atención plena, eficacia y seguridad</a> y <a href="https://pubmed.ncbi.nlm.nih.gov/32820538/" target="_blank" rel="noreferrer">revisión sobre experiencias adversas</a>, para límites y salida segura.</li>
+                <li><a href="https://pubmed.ncbi.nlm.nih.gov/26167788/" target="_blank" rel="noreferrer">Metaanálisis sobre autodiálogo</a> y <a href="https://pubmed.ncbi.nlm.nih.gov/34054628/" target="_blank" rel="noreferrer">metaanálisis de planes si-entonces</a>, para las frases ligadas a conducta.</li>
+                <li><a href="https://pubmed.ncbi.nlm.nih.gov/26769745/" target="_blank" rel="noreferrer">Revisión sobre lectura rápida</a>, para no equiparar velocidad con comprensión.</li>
+                <li><a href="https://www.investor.gov/additional-resources/spotlight/formerdirectorlorischock-directors-take/thinking-day-trading-know-risks" target="_blank" rel="noreferrer">Investor.gov: riesgos del day trading</a>, para mantener este apartado fuera de las señales financieras.</li>
+                <li><a href="https://adaa.org/find-help/support" target="_blank" rel="noreferrer">ADAA Support Communities</a> y <a href="https://sidebyside.mind.org.uk/faqs/" target="_blank" rel="noreferrer">Mind Side by Side</a>, comunidades entre pares, no atención profesional.</li>
+                <li><a href="https://github.com/sap1110/mindful" target="_blank" rel="noreferrer">Mindful en GitHub</a> y <a href="https://github.com/rudra496/mindwell" target="_blank" rel="noreferrer">Mindwell en GitHub</a>, consultados como ejemplos técnicos de privacidad y aclaraciones no diagnósticas.</li>
+              </ul>
+            </div>
+          </details>
+        </article>
       </section>
 
       <section class="reader-view is-hidden" id="reader-view" aria-labelledby="reader-title">
@@ -161,6 +431,6 @@
     </dialog>
     <noscript>Esta página necesita JavaScript para mostrar el lector rápido.</noscript>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister()));</script>
-    <script defer src="./app.js?v=19"></script>
+    <script defer src="./app.js?v=22"></script>
   </body>
 </html>
