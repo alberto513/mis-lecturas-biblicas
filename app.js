@@ -64,6 +64,15 @@ const PROGRESS_PREFIX = 'lecturas-biblicas:progress:';
 const FOCUS_SETTINGS_KEY = 'lecturas-biblicas:focus-settings';
 const FOCUS_RESULTS_KEY = 'lecturas-biblicas:focus-results';
 const ATMOSPHERE_SETTINGS_KEY = 'lecturas-biblicas:atmosphere-settings';
+const ACTIVE_READING_SESSION_TRACK = 'session:lectura-activa-50';
+const ACTIVE_READING_SESSION_PLAN = [
+  { source: './assets/audio/Impulso_Estable_120_BPM_original.wav', label: 'Impulso estable · 120 BPM', durationMs: 10 * 60000 },
+  { source: './assets/audio/Tono_de_Dios_22s.mp4', label: 'Tono de Dios', durationMs: 8 * 60000 },
+  { source: './assets/audio/Ritmo_Activo_108_BPM_original.wav', label: 'Ritmo activo · 108 BPM', durationMs: 10 * 60000 },
+  { source: './assets/audio/Pulso_Medio_Continuo_4s.webm', label: 'Pulso medio continuo', durationMs: 8 * 60000 },
+  { source: './assets/audio/Impulso_Estable_120_BPM_original.wav', label: 'Impulso estable · 120 BPM', durationMs: 10 * 60000 },
+  { source: './assets/audio/Despertar_Energia_15s.mp4', label: 'Despertar · energía sostenida', durationMs: 4 * 60000 },
+];
 const ATMOSPHERE_CATALOG = [
   { id: 'desierto-alba', title: 'Desierto del alba', file: 'desierto-del-alba.png', category: 'paisajes', tags: ['antiguo', 'genesis', 'exodo', 'salmos', 'desierto'], accent: '#d8a454', surface: 'rgba(17, 12, 7, .89)' },
   { id: 'sinai-moise', title: 'Sinaí · escena inspirada en Moisés', file: 'sinai-moise.png', category: 'antiguo', tags: ['antiguo', 'exodo', 'deuteronomio', 'moises', 'sinai'], accent: '#ce9255', surface: 'rgba(18, 10, 7, .89)' },
@@ -86,7 +95,7 @@ focusSettings.betaFrequency = clamp(Number(focusSettings.betaFrequency) || 18, 1
 focusSettings.masterVolume = clamp(Number(focusSettings.masterVolume), 0, 1);
 focusSettings.toneVolume = clamp(Number(focusSettings.toneVolume), 0, 1);
 focusSettings.musicVolume = clamp(Number(focusSettings.musicVolume), 0, 1);
-focusSettings.sessionMinutes = [30, 45, 60].includes(Number(focusSettings.sessionMinutes)) ? Number(focusSettings.sessionMinutes) : 60;
+focusSettings.sessionMinutes = [30, 45, 50, 60].includes(Number(focusSettings.sessionMinutes)) ? Number(focusSettings.sessionMinutes) : 60;
 
 let atmosphereSettings = { enabled: true, followBook: true, category: 'all', interval: '10', customMinutes: 10, intensity: 'balanced', rotationPaused: false, favorites: [], hidden: [] };
 try { atmosphereSettings = { ...atmosphereSettings, ...JSON.parse(localStorage.getItem(ATMOSPHERE_SETTINGS_KEY) || '{}') }; } catch { /* The visual layer remains optional if storage is blocked. */ }
@@ -103,7 +112,7 @@ let words = [];
 let position = 0;
 let isPlaying = false;
 let timer = null;
-let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, musicPrimaryGain: null, musicSecondaryGain: null, oscillators: [], musicElement: new Audio(), musicSecondaryElement: new Audio(), musicSource: null, musicSecondarySource: null, musicActiveSlot: 'primary', musicLoopTimer: null, musicLoopRevision: 0, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
+let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, musicPrimaryGain: null, musicSecondaryGain: null, oscillators: [], musicElement: new Audio(), musicSecondaryElement: new Audio(), musicSource: null, musicSecondarySource: null, musicActiveSlot: 'primary', musicLoopTimer: null, musicLoopRevision: 0, playlistTimer: null, playlistRevision: 0, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
 let atmosphereTimer = null;
 let atmosphereCurrentId = null;
 let atmosphereVisibleLayer = 'a';
@@ -178,7 +187,8 @@ function formatDuration(milliseconds) {
 
 function saveFocusSettings() { try { localStorage.setItem(FOCUS_SETTINGS_KEY, JSON.stringify(focusSettings)); } catch { /* The panel remains usable if storage is blocked. */ } }
 function modeName(mode = focusSettings.mode) { return ({ beta: 'Alerta activa · beta', gamma: 'Concentración experimental · gamma', instrumental: 'Energía instrumental', silence: 'Silencio' })[mode]; }
-function sessionModeName() { return `${modeName()}${focusSettings.musicEnabled && focusSettings.mode !== 'instrumental' ? ' + música' : ''}`; }
+function isActiveReadingSessionTrack(track = focusSettings.musicTrack) { return track === ACTIVE_READING_SESSION_TRACK; }
+function sessionModeName() { return isActiveReadingSessionTrack() ? 'Sesión activa de lectura · 50 min' : `${modeName()}${focusSettings.musicEnabled && focusSettings.mode !== 'instrumental' ? ' + música' : ''}`; }
 function formatSessionTime(milliseconds) { const seconds = Math.max(0, Math.ceil(milliseconds / 1000)); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
 function currentSessionRemaining() { return focusAudio.running ? Math.max(0, focusAudio.remainingMs - (Date.now() - focusAudio.startedAt)) : focusAudio.remainingMs; }
 function toneMode() { return ['beta', 'gamma'].includes(focusSettings.mode) ? focusSettings.mode : null; }
@@ -456,9 +466,36 @@ function setMusicSource(source, label, objectUrl = null) {
   ui.musicFileName.textContent = label || 'Todavía no elegiste un archivo.';
 }
 
+function clearActiveReadingPlaylist() {
+  focusAudio.playlistRevision += 1;
+  if (focusAudio.playlistTimer) window.clearTimeout(focusAudio.playlistTimer);
+  focusAudio.playlistTimer = null;
+}
+
+async function playActiveReadingSegment(index, revision) {
+  if (revision !== focusAudio.playlistRevision || !focusAudio.running || !isActiveReadingSessionTrack()) return;
+  const segment = ACTIVE_READING_SESSION_PLAN[index];
+  if (!segment) return;
+  ramp(focusAudio.musicGain, 0, .35);
+  await delay(380);
+  if (revision !== focusAudio.playlistRevision || !focusAudio.running || !isActiveReadingSessionTrack()) return;
+  setMusicSource(segment.source, `Sesión activa · ${segment.label}`);
+  syncMusic();
+  if (index < ACTIVE_READING_SESSION_PLAN.length - 1) {
+    focusAudio.playlistTimer = window.setTimeout(() => playActiveReadingSegment(index + 1, revision), segment.durationMs);
+  }
+}
+
+function startActiveReadingPlaylist() {
+  clearActiveReadingPlaylist();
+  const revision = focusAudio.playlistRevision;
+  playActiveReadingSegment(0, revision);
+}
+
 function ensureMusicSource() {
+  if (isActiveReadingSessionTrack()) return true;
   if (focusAudio.musicElement.src) return true;
-  const firstLibraryTrack = Array.from(ui.musicLibrary.options).find((option) => Boolean(option.value));
+  const firstLibraryTrack = Array.from(ui.musicLibrary.options).find((option) => Boolean(option.value) && !isActiveReadingSessionTrack(option.value));
   if (!firstLibraryTrack) return false;
   focusSettings.musicTrack = firstLibraryTrack.value;
   ui.musicLibrary.value = firstLibraryTrack.value;
@@ -565,7 +602,7 @@ function pauseSessionClock() {
 
 async function startFocusAudio() {
   try {
-    if (focusSettings.musicEnabled) ensureMusicSource();
+    if (focusSettings.musicEnabled && !isActiveReadingSessionTrack()) ensureMusicSource();
     const context = ensureAudioGraph();
     await context.resume();
     connectMusic();
@@ -574,7 +611,8 @@ async function startFocusAudio() {
     focusAudio.sessionMode = sessionModeName();
     ramp(focusAudio.masterGain, focusSettings.masterVolume, .22);
     configureTones();
-    syncMusic();
+    if (isActiveReadingSessionTrack()) startActiveReadingPlaylist();
+    else syncMusic();
     beginSessionClock();
     renderFocusPanel();
   } catch (error) { ui.audioStatus.textContent = error.message || 'No se pudo iniciar el ambiente.'; }
@@ -585,6 +623,7 @@ function pauseFocusAudio() {
   pauseSessionClock();
   focusAudio.running = false;
   ramp(focusAudio.masterGain, 0, .18);
+  clearActiveReadingPlaylist();
   clearMusicLoopTimer();
   focusAudio.musicElement.pause();
   focusAudio.musicSecondaryElement.pause();
@@ -825,7 +864,7 @@ function selectFocusMode(mode) {
   if (mode === 'instrumental') { focusSettings.musicEnabled = true; ensureMusicSource(); }
   if (mode === 'silence') focusSettings.musicEnabled = false;
   saveFocusSettings();
-  if (focusAudio.running) { configureTones(); syncMusic(); }
+  if (focusAudio.running) { configureTones(); if (isActiveReadingSessionTrack()) startActiveReadingPlaylist(); else syncMusic(); }
   renderFocusPanel();
   // Choosing an instrumental ambience is an explicit user action, so start it
   // immediately instead of requiring a second, easily missed button press.
@@ -855,13 +894,31 @@ if (hasFocusPanel) {
     if (focusAudio.running) apply(focusSettings[property]);
     renderFocusPanel();
   }));
-  ui.musicEnabled.addEventListener('change', () => { focusSettings.musicEnabled = ui.musicEnabled.checked; if (focusSettings.musicEnabled) ensureMusicSource(); saveFocusSettings(); if (focusAudio.running) syncMusic(); renderFocusPanel(); });
+  ui.musicEnabled.addEventListener('change', () => {
+    focusSettings.musicEnabled = ui.musicEnabled.checked;
+    if (focusSettings.musicEnabled) ensureMusicSource();
+    else clearActiveReadingPlaylist();
+    saveFocusSettings();
+    if (focusAudio.running) { if (focusSettings.musicEnabled && isActiveReadingSessionTrack()) startActiveReadingPlaylist(); else syncMusic(); }
+    renderFocusPanel();
+  });
   ui.musicLibrary.addEventListener('change', () => {
     const source = ui.musicLibrary.value;
     const label = source ? ui.musicLibrary.selectedOptions[0].textContent : '';
     focusSettings.musicTrack = source;
-    setMusicSource(source, label);
     if (source) { focusSettings.mode = 'instrumental'; focusSettings.musicEnabled = true; }
+    if (isActiveReadingSessionTrack(source)) {
+      focusSettings.sessionMinutes = 50;
+      focusAudio.remainingMs = 50 * 60000;
+      ui.musicFileName.textContent = 'Sesión de 50 min: alterna seis bloques de energía moderada.';
+      saveFocusSettings();
+      if (focusAudio.running) { focusAudio.startedAt = Date.now(); configureTones(); startActiveReadingPlaylist(); }
+      renderFocusPanel();
+      if (!focusAudio.running) startFocusAudio();
+      return;
+    }
+    clearActiveReadingPlaylist();
+    setMusicSource(source, label);
     saveFocusSettings();
     if (focusAudio.running) { configureTones(); syncMusic(); }
     renderFocusPanel();
@@ -872,6 +929,7 @@ if (hasFocusPanel) {
     if (!file) return;
     const objectUrl = URL.createObjectURL(file);
     focusSettings.musicTrack = '';
+    clearActiveReadingPlaylist();
     setMusicSource(objectUrl, file.name, objectUrl);
     focusSettings.mode = 'instrumental';
     focusSettings.musicEnabled = true;
@@ -903,7 +961,8 @@ if (hasFocusPanel) {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.focusPanel.classList.contains('is-hidden')) setFocusPanel(false); if (event.key === 'Escape' && hasAtmospherePanel && !ui.atmospherePanel.classList.contains('is-hidden')) setAtmospherePanel(false); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && focusAudio.running) pauseFocusAudio(); if (document.hidden) clearAtmosphereTimer(); else scheduleAtmosphere(); });
   const savedTrack = Array.from(ui.musicLibrary.options).find((option) => option.value === focusSettings.musicTrack);
-  if (savedTrack) setMusicSource(savedTrack.value, savedTrack.textContent);
+  if (savedTrack && !isActiveReadingSessionTrack(savedTrack.value)) setMusicSource(savedTrack.value, savedTrack.textContent);
+  else if (savedTrack) ui.musicFileName.textContent = 'Sesión de 50 min: alterna seis bloques de energía moderada.';
   else focusSettings.musicTrack = '';
   focusAudio.remainingMs = focusSettings.sessionMinutes * 60000;
   renderFocusPanel();
