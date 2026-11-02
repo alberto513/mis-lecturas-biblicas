@@ -744,6 +744,9 @@ function selectFocusMode(mode) {
   saveFocusSettings();
   if (focusAudio.running) { configureTones(); syncMusic(); }
   renderFocusPanel();
+  // Choosing an instrumental ambience is an explicit user action, so start it
+  // immediately instead of requiring a second, easily missed button press.
+  if (mode === 'instrumental' && !focusAudio.running) startFocusAudio();
 }
 
 if (hasFocusPanel) {
@@ -779,6 +782,7 @@ if (hasFocusPanel) {
     saveFocusSettings();
     if (focusAudio.running) { configureTones(); syncMusic(); }
     renderFocusPanel();
+    if (source && !focusAudio.running) startFocusAudio();
   });
   ui.musicFile.addEventListener('change', () => {
     const [file] = ui.musicFile.files;
@@ -791,6 +795,7 @@ if (hasFocusPanel) {
     saveFocusSettings();
     if (focusAudio.running) syncMusic();
     renderFocusPanel();
+    if (!focusAudio.running) startFocusAudio();
   });
   ui.audioPlay.addEventListener('click', () => focusAudio.running ? pauseFocusAudio() : startFocusAudio());
   ui.audioTest.addEventListener('click', playSoundTest);
