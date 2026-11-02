@@ -88,7 +88,7 @@ try { settings = { ...settings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)
 if (!VERSIONS[settings.versionId]) settings.versionId = 'vbl';
 settings.fontSize = clamp(Number(settings.fontSize) || 10, 1, 20);
 
-let focusSettings = { mode: 'silence', betaFrequency: 18, masterVolume: .4, toneVolume: .18, musicVolume: .35, musicEnabled: false, musicTrack: '', sessionMinutes: 60, youtubeUrl: '' };
+let focusSettings = { mode: 'silence', betaFrequency: 18, masterVolume: .7, toneVolume: .18, musicVolume: .7, musicEnabled: false, musicTrack: '', sessionMinutes: 60, youtubeUrl: '' };
 try { focusSettings = { ...focusSettings, ...JSON.parse(localStorage.getItem(FOCUS_SETTINGS_KEY) || '{}') }; } catch { /* Local storage may be unavailable. */ }
 focusSettings.mode = ['beta', 'gamma', 'instrumental', 'silence'].includes(focusSettings.mode) ? focusSettings.mode : 'silence';
 focusSettings.betaFrequency = clamp(Number(focusSettings.betaFrequency) || 18, 14, 20);
@@ -96,6 +96,13 @@ focusSettings.masterVolume = clamp(Number(focusSettings.masterVolume), 0, 1);
 focusSettings.toneVolume = clamp(Number(focusSettings.toneVolume), 0, 1);
 focusSettings.musicVolume = clamp(Number(focusSettings.musicVolume), 0, 1);
 focusSettings.sessionMinutes = [30, 45, 50, 60].includes(Number(focusSettings.sessionMinutes)) ? Number(focusSettings.sessionMinutes) : 60;
+// Earlier releases used 40% × 35%, leaving music at only 14% effective output.
+// Migrate that untouched default once; deliberate user changes remain respected.
+if (focusSettings.masterVolume === .4 && focusSettings.musicVolume === .35) {
+  focusSettings.masterVolume = .7;
+  focusSettings.musicVolume = .7;
+  saveFocusSettings();
+}
 
 let atmosphereSettings = { enabled: true, followBook: true, category: 'all', interval: '10', customMinutes: 10, intensity: 'balanced', rotationPaused: false, favorites: [], hidden: [] };
 try { atmosphereSettings = { ...atmosphereSettings, ...JSON.parse(localStorage.getItem(ATMOSPHERE_SETTINGS_KEY) || '{}') }; } catch { /* The visual layer remains optional if storage is blocked. */ }
