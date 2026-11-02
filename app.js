@@ -103,7 +103,7 @@ let words = [];
 let position = 0;
 let isPlaying = false;
 let timer = null;
-let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, oscillators: [], musicElement: new Audio(), musicSource: null, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
+let focusAudio = { context: null, masterGain: null, toneGain: null, musicGain: null, musicPrimaryGain: null, musicSecondaryGain: null, oscillators: [], musicElement: new Audio(), musicSecondaryElement: new Audio(), musicSource: null, musicSecondarySource: null, musicActiveSlot: 'primary', musicLoopTimer: null, musicLoopRevision: 0, running: false, interval: null, remainingMs: 0, startedAt: 0, toneRevision: 0, fileUrl: null, sessionMode: 'silence' };
 let atmosphereTimer = null;
 let atmosphereCurrentId = null;
 let atmosphereVisibleLayer = 'a';
@@ -351,13 +351,19 @@ function ensureAudioGraph() {
   const masterGain = context.createGain();
   const toneGain = context.createGain();
   const musicGain = context.createGain();
+  const musicPrimaryGain = context.createGain();
+  const musicSecondaryGain = context.createGain();
   masterGain.gain.value = 0;
   toneGain.gain.value = 0;
   musicGain.gain.value = 0;
+  musicPrimaryGain.gain.value = 1;
+  musicSecondaryGain.gain.value = 0;
   toneGain.connect(masterGain);
+  musicPrimaryGain.connect(musicGain);
+  musicSecondaryGain.connect(musicGain);
   musicGain.connect(masterGain);
   masterGain.connect(context.destination);
-  focusAudio = { ...focusAudio, context, masterGain, toneGain, musicGain };
+  focusAudio = { ...focusAudio, context, masterGain, toneGain, musicGain, musicPrimaryGain, musicSecondaryGain };
   return context;
 }
 
@@ -407,19 +413,45 @@ async function configureTones() {
 function connectMusic() {
   if (!focusAudio.context || focusAudio.musicSource) return;
   focusAudio.musicSource = focusAudio.context.createMediaElementSource(focusAudio.musicElement);
-  focusAudio.musicSource.connect(focusAudio.musicGain);
+  focusAudio.musicSecondarySource = focusAudio.context.createMediaElementSource(focusAudio.musicSecondaryElement);
+  focusAudio.musicSource.connect(focusAudio.musicPrimaryGain);
+  focusAudio.musicSecondarySource.connect(focusAudio.musicSecondaryGain);
+}
+
+function musicElementForSlot(slot = focusAudio.musicActiveSlot) { return slot === 'primary' ? focusAudio.musicElement : focusAudio.musicSecondaryElement; }
+function musicGainForSlot(slot = focusAudio.musicActiveSlot) { return slot === 'primary' ? focusAudio.musicPrimaryGain : focusAudio.musicSecondaryGain; }
+function otherMusicSlot(slot = focusAudio.musicActiveSlot) { return slot === 'primary' ? 'secondary' : 'primary'; }
+function clearMusicLoopTimer() {
+  focusAudio.musicLoopRevision += 1;
+  if (focusAudio.musicLoopTimer) window.clearTimeout(focusAudio.musicLoopTimer);
+  focusAudio.musicLoopTimer = null;
+}
+function resetMusicElement(element) {
+  element.pause();
+  try { element.currentTime = 0; } catch { /* The next source may not have loaded yet. */ }
 }
 
 function setMusicSource(source, label, objectUrl = null) {
   if (focusAudio.fileUrl && focusAudio.fileUrl !== objectUrl) URL.revokeObjectURL(focusAudio.fileUrl);
   focusAudio.fileUrl = objectUrl;
-  focusAudio.musicElement.pause();
+  clearMusicLoopTimer();
+  resetMusicElement(focusAudio.musicElement);
+  resetMusicElement(focusAudio.musicSecondaryElement);
+  focusAudio.musicActiveSlot = 'primary';
+  if (focusAudio.context) {
+    ramp(focusAudio.musicPrimaryGain, 1, .01);
+    ramp(focusAudio.musicSecondaryGain, 0, .01);
+  }
   if (source) {
     focusAudio.musicElement.src = source;
-    focusAudio.musicElement.loop = true;
+    focusAudio.musicSecondaryElement.src = source;
+    focusAudio.musicElement.loop = false;
+    focusAudio.musicSecondaryElement.loop = false;
   } else {
     focusAudio.musicElement.removeAttribute('src');
+    focusAudio.musicSecondaryElement.removeAttribute('src');
     focusAudio.musicElement.load();
+    focusAudio.musicSecondaryElement.load();
   }
   ui.musicFileName.textContent = label || 'Todavía no elegiste un archivo.';
 }
@@ -456,12 +488,61 @@ async function playSoundTest() {
   } catch (error) { ui.audioStatus.textContent = error.message || 'No se pudo ejecutar la prueba de sonido.'; }
 }
 
+function scheduleMusicCrossfade() {
+  clearMusicLoopTimer();
+  if (!focusAudio.running || !focusSettings.musicEnabled) return;
+  const activeElement = musicElementForSlot();
+  const revision = focusAudio.musicLoopRevision;
+  const schedule = () => {
+    if (revision !== focusAudio.musicLoopRevision || !focusAudio.running || !Number.isFinite(activeElement.duration)) return;
+    const fadeSeconds = Math.min(.55, Math.max(.2, activeElement.duration * .06));
+    const waitMilliseconds = Math.max(80, (activeElement.duration - activeElement.currentTime - fadeSeconds) * 1000);
+    focusAudio.musicLoopTimer = window.setTimeout(() => crossfadeMusicLoop(fadeSeconds, revision), waitMilliseconds);
+  };
+  if (Number.isFinite(activeElement.duration) && activeElement.readyState >= HTMLMediaElement.HAVE_METADATA) schedule();
+  else activeElement.addEventListener('loadedmetadata', schedule, { once: true });
+}
+
+async function crossfadeMusicLoop(fadeSeconds, revision) {
+  if (revision !== focusAudio.musicLoopRevision || !focusAudio.running || !focusSettings.musicEnabled) return;
+  const outgoingSlot = focusAudio.musicActiveSlot;
+  const incomingSlot = otherMusicSlot(outgoingSlot);
+  const outgoingElement = musicElementForSlot(outgoingSlot);
+  const incomingElement = musicElementForSlot(incomingSlot);
+  const outgoingGain = musicGainForSlot(outgoingSlot);
+  const incomingGain = musicGainForSlot(incomingSlot);
+  try {
+    incomingElement.pause();
+    incomingElement.currentTime = 0;
+    ramp(incomingGain, 0, .01);
+    await incomingElement.play();
+  } catch {
+    ui.audioStatus.textContent = 'El navegador no pudo repetir este archivo de música.';
+    return;
+  }
+  ramp(outgoingGain, 0, fadeSeconds);
+  ramp(incomingGain, 1, fadeSeconds);
+  window.setTimeout(() => {
+    if (revision !== focusAudio.musicLoopRevision) return;
+    outgoingElement.pause();
+    try { outgoingElement.currentTime = 0; } catch { /* The source is being changed. */ }
+    focusAudio.musicActiveSlot = incomingSlot;
+    scheduleMusicCrossfade();
+  }, fadeSeconds * 1000);
+}
+
 function syncMusic() {
   if (!focusAudio.context) return;
   const canPlay = focusAudio.running && focusSettings.musicEnabled && Boolean(focusAudio.musicElement.src);
   ramp(focusAudio.musicGain, canPlay ? focusSettings.musicVolume : 0, .18);
-  if (canPlay) focusAudio.musicElement.play().catch(() => { ui.audioStatus.textContent = 'El navegador no pudo iniciar el archivo de música.'; });
-  else focusAudio.musicElement.pause();
+  if (canPlay) {
+    const activeElement = musicElementForSlot();
+    activeElement.play().then(scheduleMusicCrossfade).catch(() => { ui.audioStatus.textContent = 'El navegador no pudo iniciar el archivo de música.'; });
+  } else {
+    clearMusicLoopTimer();
+    resetMusicElement(focusAudio.musicElement);
+    resetMusicElement(focusAudio.musicSecondaryElement);
+  }
 }
 
 function clearSessionInterval() { if (focusAudio.interval) { window.clearInterval(focusAudio.interval); focusAudio.interval = null; } }
@@ -504,7 +585,9 @@ function pauseFocusAudio() {
   pauseSessionClock();
   focusAudio.running = false;
   ramp(focusAudio.masterGain, 0, .18);
+  clearMusicLoopTimer();
   focusAudio.musicElement.pause();
+  focusAudio.musicSecondaryElement.pause();
   window.setTimeout(() => focusAudio.context?.suspend().catch(() => {}), 220);
   renderFocusPanel();
 }
