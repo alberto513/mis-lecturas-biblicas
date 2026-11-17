@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lecturas-biblicas-v17';
+const CACHE_NAME = 'lecturas-biblicas-v18';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './content/NT_001_Mateo_1-18.txt', './content/NT_002_Mateo_19-28_Marcos_1-5.txt',
@@ -11,6 +11,7 @@ const APP_FILES = [
   './content/NT_012_2_Timoteo_1-4_Tito_1-3_Filemón_1_Hebreos_1-13_Santiago_1-5_1_Pedro_1.txt',
   './content/NT_013_1_Pedro_2-5_2_Pedro_1-3_1_Juan_1-5_2_Juan_1_3_Juan_1_Judas_1_Apocalipsis_1-14.txt',
   './content/NT_014_Apocalipsis_15-22.txt',
+  './content/promesas/Promesas_de_Dios_en_Cristo.txt', './content/promesas/Declaraciones_Biblicas_Soy.txt',
   './content/pddpt/NT_001_Mateo_01_a_20.txt', './content/pddpt/NT_002_Mateo_21_a_Marcos_08.txt',
   './content/pddpt/NT_003_Marcos_09_a_Lucas_07.txt', './content/pddpt/NT_004_Lucas_08_a_22.txt',
   './content/pddpt/NT_005_Lucas_23_a_Juan_14.txt', './content/pddpt/NT_006_Juan_15_a_Hechos_11.txt',
