@@ -789,8 +789,11 @@ async function openReader(reading) {
     renderReader();
     document.querySelector('#play-button').focus();
   } catch (error) {
-    ui.word.textContent = 'No se pudo abrir esta lectura.';
-    ui.status.textContent = error.message;
+    const openedAsFile = location.protocol === 'file:';
+    ui.word.textContent = openedAsFile ? 'Abre el lector local.' : 'No se pudo abrir esta lectura.';
+    ui.status.textContent = openedAsFile
+      ? 'Chrome bloquea por seguridad las lecturas abiertas desde Archivo. Cierra esta pestaña y haz doble clic en “Abrir lector local.cmd”.'
+      : error.message;
   }
 }
 
