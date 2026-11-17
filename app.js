@@ -22,6 +22,7 @@ const RVR1960_FILES = [
 
 const THEME_READINGS = [
   { id: 'PROMESAS', file: 'Promesas_de_Dios_en_Cristo.txt', title: 'Promesas de Dios en Cristo', folder: 'promesas', isThematic: true },
+  { id: 'DECLARACIONES', file: 'Declaraciones_Biblicas_Soy.txt', title: 'Declaraciones bíblicas · Soy…', folder: 'promesas', isThematic: true },
 ];
 const VERSIONS = {
   vbl: {
@@ -130,7 +131,7 @@ const ui = {
   progress: document.querySelector('#progress-input'), progressLabel: document.querySelector('#progress-label'), count: document.querySelector('#word-count'),
   play: document.querySelector('#play-button'), speed: document.querySelector('#speed-label'), fontSize: document.querySelector('#font-size-label'), versionSelect: document.querySelector('#version-select'),
   versionCredit: document.querySelector('#version-credit'),
-  personalOptimization: document.querySelector('#personal-optimization-view'), personalOptimizationOpen: document.querySelector('#personal-optimization-open'), personalOptimizationBack: document.querySelector('#personal-optimization-back'), additionalContent: document.querySelector('#additional-content'), promisesOpen: document.querySelector('#promises-open'),
+  personalOptimization: document.querySelector('#personal-optimization-view'), personalOptimizationOpen: document.querySelector('#personal-optimization-open'), personalOptimizationBack: document.querySelector('#personal-optimization-back'), additionalContent: document.querySelector('#additional-content'), promisesOpen: document.querySelector('#promises-open'), declarationsOpen: document.querySelector('#declarations-open'),
   focusPanel: document.querySelector('#focus-panel'), focusToggle: document.querySelector('#focus-panel-button'), focusClose: document.querySelector('#focus-panel-close'), audioStatus: document.querySelector('#audio-status'), audioTest: document.querySelector('#audio-test-button'),
   betaFrequency: document.querySelector('#beta-frequency'), betaFrequencyValue: document.querySelector('#beta-frequency-value'), masterVolume: document.querySelector('#master-volume'), masterVolumeValue: document.querySelector('#master-volume-value'),
   toneVolume: document.querySelector('#tone-volume'), toneVolumeValue: document.querySelector('#tone-volume-value'), musicVolume: document.querySelector('#music-volume'), musicVolumeValue: document.querySelector('#music-volume-value'),
@@ -836,6 +837,7 @@ if (hasPersonalOptimization) {
   ui.personalOptimizationBack.addEventListener('click', () => showLibrary({ restoreFocus: true }));
 }
 if (ui.promisesOpen) ui.promisesOpen.addEventListener('click', () => openReader(THEME_READINGS[0]));
+if (ui.declarationsOpen) ui.declarationsOpen.addEventListener('click', () => openReader(THEME_READINGS[1]));
 ui.versionSelect.addEventListener('change', () => {
   settings.versionId = ui.versionSelect.value;
   saveSettings();
